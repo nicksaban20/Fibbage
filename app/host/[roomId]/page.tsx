@@ -67,7 +67,7 @@ export default function HostPage() {
     <main style={{ minHeight: '100vh', padding: 'var(--spacing-xl)' }}>
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)' }}>
-        <h1 style={{ fontSize: '1.5rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 style={{ fontSize: '1.5rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.3))' }}>
           FIBBAGE AI
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
@@ -75,7 +75,7 @@ export default function HostPage() {
             <div className={getTimerClass()}>{timeRemaining}</div>
           )}
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Room Code</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Join Code</div>
             <div className="room-code" style={{ fontSize: '1.5rem', padding: 'var(--spacing-sm) var(--spacing-md)' }}>
               {gameState.roomCode}
             </div>
@@ -93,39 +93,53 @@ export default function HostPage() {
       {/* LOBBY PHASE */}
       {gameState.phase === 'lobby' && (
         <div className="animate-fade-in">
-          <div className="card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ marginBottom: 'var(--spacing-xl)' }}>Waiting for Players</h2>
+          <div className="card-glass" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: 'var(--spacing-2xl)' }}>
+            <h2 style={{ marginBottom: 'var(--spacing-xl)', fontSize: '2.5rem', background: 'linear-gradient(to right, #fff, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              THE ARENA AWAITS
+            </h2>
 
-            <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-              <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-md)' }}>
-                Players join at <strong style={{ color: 'var(--color-primary-light)' }}>this website</strong> with code:
+            <div style={{ marginBottom: 'var(--spacing-xl)', background: 'rgba(0,0,0,0.2)', padding: 'var(--spacing-lg)', borderRadius: 'var(--radius-lg)' }}>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-sm)', fontSize: '1.1rem' }}>
+                Join at <strong style={{ color: 'white' }}>fiber-ai.vercel.app</strong> with code:
               </p>
-              <div className="room-code animate-glow">{gameState.roomCode}</div>
+              <div className="room-code animate-glow" style={{ fontSize: '4rem', padding: 'var(--spacing-md) var(--spacing-2xl)' }}>
+                {gameState.roomCode}
+              </div>
             </div>
 
             {/* Player list */}
-            <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-                {gameState.players.filter(p => !p.isHost).length} player{gameState.players.filter(p => !p.isHost).length !== 1 ? 's' : ''} joined
-              </p>
-              <ul className="player-list" style={{ justifyContent: 'center' }}>
-                {gameState.players.filter(p => !p.isHost).map((player) => (
-                  <li key={player.id} className="player-chip">
-                    <span className="player-avatar">{player.name.charAt(0).toUpperCase()}</span>
-                    {player.name}
-                  </li>
-                ))}
+            <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: 'var(--spacing-lg)' }}>
+                <span style={{ height: '1px', width: '50px', background: 'rgba(255,255,255,0.1)' }}></span>
+                <p style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.875rem' }}>
+                  {gameState.players.filter(p => !p.isHost).length} Contenders Ready
+                </p>
+                <span style={{ height: '1px', width: '50px', background: 'rgba(255,255,255,0.1)' }}></span>
+              </div>
+
+              <ul className="player-list" style={{ justifyContent: 'center', minHeight: '100px' }}>
+                {gameState.players.filter(p => !p.isHost).length === 0 ? (
+                  <li style={{ color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>Waiting for brave souls...</li>
+                ) : (
+                  gameState.players.filter(p => !p.isHost).map((player) => (
+                    <li key={player.id} className="player-chip animate-slide-up">
+                      <span className="player-avatar">{player.name.charAt(0).toUpperCase()}</span>
+                      {player.name}
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
             {/* Game config */}
             <div style={{
-              background: 'var(--color-bg-elevated)',
+              background: 'rgba(0,0,0,0.2)',
               padding: 'var(--spacing-lg)',
-              borderRadius: 'var(--radius-md)',
-              marginBottom: 'var(--spacing-xl)'
+              borderRadius: 'var(--radius-lg)',
+              marginBottom: 'var(--spacing-xl)',
+              textAlign: 'left'
             }}>
-              <h3 style={{ fontSize: '1rem', marginBottom: 'var(--spacing-lg)', color: 'var(--color-text-secondary)' }}>Game Settings</h3>
+              <h3 style={{ fontSize: '0.875rem', marginBottom: 'var(--spacing-md)', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Match Settings</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--spacing-lg)' }}>
                 <div>
                   <label className="label">Rounds</label>
@@ -136,12 +150,12 @@ export default function HostPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     {[3, 5, 7, 10, 15].map(n => (
-                      <option key={n} value={n}>{n} rounds</option>
+                      <option key={n} value={n}>{n} Rounds</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Answer Time</label>
+                  <label className="label">Lie Timer</label>
                   <select
                     className="input"
                     value={config.answerTimeSeconds}
@@ -149,12 +163,12 @@ export default function HostPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     {[30, 45, 60, 90, 120].map(n => (
-                      <option key={n} value={n}>{n} seconds</option>
+                      <option key={n} value={n}>{n}s</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Voting Time</label>
+                  <label className="label">Vote Timer</label>
                   <select
                     className="input"
                     value={config.votingTimeSeconds}
@@ -162,7 +176,7 @@ export default function HostPage() {
                     style={{ cursor: 'pointer' }}
                   >
                     {[30, 45, 60, 90].map(n => (
-                      <option key={n} value={n}>{n} seconds</option>
+                      <option key={n} value={n}>{n}s</option>
                     ))}
                   </select>
                 </div>
@@ -171,10 +185,11 @@ export default function HostPage() {
 
             <button
               onClick={handleStartGame}
-              className="btn btn-primary btn-large"
+              className="btn btn-primary btn-large animate-glow"
               disabled={gameState.players.length < 2}
+              style={{ padding: '1.2rem 3rem', fontSize: '1.25rem' }}
             >
-              {gameState.players.length < 2 ? 'Need 2+ players to start' : 'Start Game'}
+              {gameState.players.length < 2 ? 'WAITING FOR 2+ PLAYERS' : 'START THE GAME'}
             </button>
           </div>
         </div>
@@ -182,15 +197,22 @@ export default function HostPage() {
 
       {/* QUESTION PHASE */}
       {gameState.phase === 'question' && gameState.currentQuestion && (
-        <div className="animate-slide-up">
-          <div className="card question-display" style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-text-muted)' }}>
-              Round {gameState.currentRound} of {gameState.config.totalRounds}
+        <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div className="card-glass question-display" style={{ maxWidth: '1000px', width: '100%', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%) translateY(-50%)', background: 'var(--gradient-primary)', padding: '0.5rem 1.5rem', borderRadius: 'var(--radius-full)', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+              ROUND {gameState.currentRound}
             </div>
-            <span className="question-category">{gameState.currentQuestion.category}</span>
-            <h2 className="question-text">{gameState.currentQuestion.text}</h2>
-            <p style={{ marginTop: 'var(--spacing-xl)', color: 'var(--color-text-muted)' }}>
-              Get ready to write your fake answer...
+
+            <div style={{ marginTop: 'var(--spacing-lg)' }}>
+              <span className="question-category">{gameState.currentQuestion.category}</span>
+            </div>
+
+            <h2 className="question-text" style={{ fontSize: '3rem', margin: 'var(--spacing-xl) 0' }}>
+              {gameState.currentQuestion.text}
+            </h2>
+
+            <p style={{ color: 'var(--color-primary-light)', fontSize: '1.25rem', fontWeight: 600 }}>
+              GET READY TO LIE...
             </p>
           </div>
         </div>
@@ -199,36 +221,43 @@ export default function HostPage() {
       {/* ANSWERING PHASE */}
       {gameState.phase === 'answering' && gameState.currentQuestion && (
         <div className="animate-fade-in">
-          <div className="card question-display" style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-text-muted)' }}>
-              Round {gameState.currentRound} of {gameState.config.totalRounds}
+          <div className="card-glass question-display" style={{ maxWidth: '1000px', margin: '0 auto', marginBottom: 'var(--spacing-xl)' }}>
+            <div style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Round {gameState.currentRound}
             </div>
             <span className="question-category">{gameState.currentQuestion.category}</span>
-            <h2 className="question-text" style={{ marginBottom: 'var(--spacing-xl)' }}>{gameState.currentQuestion.text}</h2>
+            <h2 className="question-text" style={{ marginBottom: 'var(--spacing-lg)' }}>{gameState.currentQuestion.text}</h2>
+          </div>
 
-            <div className="status status-waiting" style={{ maxWidth: '400px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="status status-waiting" style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
-              <span>
-                Waiting for answers... ({gameState.players.filter(p => p.hasSubmittedAnswer && !p.isHost).length}/{gameState.players.filter(p => !p.isHost).length})
+              <span style={{ fontSize: '1.2rem', marginLeft: '10px' }}>
+                Waiting for lies... {gameState.players.filter(p => p.hasSubmittedAnswer && !p.isHost).length} / {gameState.players.filter(p => !p.isHost).length}
               </span>
             </div>
 
-            <ul className="player-list" style={{ justifyContent: 'center', marginTop: 'var(--spacing-lg)' }}>
+            <div style={{ marginTop: 'var(--spacing-xl)', display: 'flex', justifyContent: 'center', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
               {gameState.players.filter(p => !p.isHost).map((player) => (
-                <li
+                <div
                   key={player.id}
                   className="player-chip"
                   style={{
                     background: player.hasSubmittedAnswer ? 'var(--color-success)' : 'var(--color-bg-elevated)',
-                    opacity: player.hasSubmittedAnswer ? 1 : 0.5
+                    opacity: player.hasSubmittedAnswer ? 1 : 0.6,
+                    transform: player.hasSubmittedAnswer ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    boxShadow: player.hasSubmittedAnswer ? '0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1.1rem'
                   }}
                 >
-                  <span className="player-avatar">{player.name.charAt(0).toUpperCase()}</span>
+                  <span className="player-avatar" style={{ width: '30px', height: '30px' }}>{player.name.charAt(0).toUpperCase()}</span>
                   {player.name}
-                  {player.hasSubmittedAnswer && <span>✓</span>}
-                </li>
+                  {player.hasSubmittedAnswer && <span style={{ marginLeft: '5px' }}>✓</span>}
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       )}
@@ -237,29 +266,36 @@ export default function HostPage() {
       {gameState.phase === 'voting' && gameState.currentQuestion && (
         <div className="animate-fade-in">
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
-            <div style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
-              Round {gameState.currentRound} of {gameState.config.totalRounds}
-            </div>
-            <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Which answer is TRUE?</h2>
-            <p style={{ color: 'var(--color-text-secondary)' }}>{gameState.currentQuestion.text}</p>
+            <h2 style={{ marginBottom: 'var(--spacing-sm)', fontSize: '2.5rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              FIND THE TRUTH
+            </h2>
+            <p style={{ color: 'var(--color-text-primary)', fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto' }}>{gameState.currentQuestion.text}</p>
           </div>
 
-          <div className="answer-grid" style={{ maxWidth: '1000px', margin: '0 auto var(--spacing-xl)' }}>
+          <div className="answer-grid" style={{ maxWidth: '1200px', margin: '0 auto var(--spacing-xl)' }}>
             {gameState.answers.map((answer, index) => (
-              <div key={answer.id} className="answer-card">
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
-                  Answer {String.fromCharCode(65 + index)}
+              <div key={answer.id} className="answer-card" style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 800,
+                  color: 'var(--color-text-muted)',
+                  marginRight: 'var(--spacing-md)',
+                  opacity: 0.5
+                }}>
+                  {String.fromCharCode(65 + index)}
                 </div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{answer.text}</div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 600 }}>{answer.text}</div>
               </div>
             ))}
           </div>
 
-          <div className="status status-waiting" style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
-            <span>
-              Waiting for votes... ({gameState.players.filter(p => p.hasVoted && !p.isHost).length}/{gameState.players.filter(p => !p.isHost).length})
-            </span>
+          <div style={{ textAlign: 'center' }}>
+            <div className="status status-waiting" style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
+              <span style={{ fontSize: '1.1rem', marginLeft: '10px' }}>
+                Votes cast: {gameState.players.filter(p => p.hasVoted && !p.isHost).length} / {gameState.players.filter(p => !p.isHost).length}
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -268,38 +304,48 @@ export default function HostPage() {
       {gameState.phase === 'results' && gameState.currentQuestion && (
         <div className="animate-slide-up">
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
-            <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Round {gameState.currentRound} Results</h2>
-            <p style={{ color: 'var(--color-text-secondary)' }}>{gameState.currentQuestion.text}</p>
+            <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '2rem' }}>THE REVEAL</h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.25rem' }}>{gameState.currentQuestion.text}</p>
           </div>
 
-          <div className="answer-grid" style={{ maxWidth: '1000px', margin: '0 auto var(--spacing-xl)' }}>
+          <div className="answer-grid" style={{ maxWidth: '1200px', margin: '0 auto var(--spacing-xl)' }}>
             {gameState.answers.map((answer, index) => {
               const authorPlayer = gameState.players.find(p => p.id === answer.playerId);
               return (
                 <div
                   key={answer.id}
                   className={`answer-card ${answer.isCorrect ? 'correct' : ''} ${answer.isAI ? 'ai' : ''}`}
-                  style={{ cursor: 'default' }}
+                  style={{
+                    cursor: 'default',
+                    opacity: answer.isCorrect ? 1 : 0.8,
+                    transform: answer.isCorrect ? 'scale(1.02)' : 'scale(1)'
+                  }}
                 >
                   {answer.votes.length > 0 && (
                     <div className="votes">
                       {answer.votes.map((voterId) => {
                         const voter = gameState.players.find(p => p.id === voterId);
                         return (
-                          <span key={voterId} className="player-avatar" style={{ width: '24px', height: '24px', fontSize: '0.75rem' }}>
+                          <span key={voterId} className="player-avatar animate-fade-in" style={{ width: '28px', height: '28px', fontSize: '0.8rem', border: '2px solid var(--color-bg-card)' }}>
                             {voter?.name.charAt(0).toUpperCase()}
                           </span>
                         );
                       })}
                     </div>
                   )}
-                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
-                    {answer.isCorrect ? '✓ THE TRUTH' : answer.isAI ? '🤖 AI LIE' : `Written by ${authorPlayer?.name || 'Unknown'}`}
+                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+                    {answer.isCorrect ? (
+                      <span style={{ color: 'var(--color-success)' }}>★ The Truth</span>
+                    ) : answer.isAI ? (
+                      <span style={{ color: 'var(--color-accent)' }}>🤖 AI Deception</span>
+                    ) : (
+                      <span>Written by {authorPlayer?.name || 'Unknown'}</span>
+                    )}
                   </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{answer.text}</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>{answer.text}</div>
                   {answer.votes.length > 0 && !answer.isCorrect && !answer.isAI && (
-                    <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.875rem', color: 'var(--color-success)' }}>
-                      +{answer.votes.length * 500} points for fooling {answer.votes.length} player{answer.votes.length > 1 ? 's' : ''}!
+                    <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.9rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                      +{answer.votes.length * 500} pts (Fooled {answer.votes.length})
                     </div>
                   )}
                 </div>
@@ -308,16 +354,18 @@ export default function HostPage() {
           </div>
 
           {/* Current Scores */}
-          <div className="card" style={{ maxWidth: '600px', margin: '0 auto var(--spacing-xl)' }}>
-            <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>Scores</h3>
+          <div className="card-glass" style={{ maxWidth: '700px', margin: '0 auto var(--spacing-xl)' }}>
+            <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--color-text-muted)' }}>Leaderboard</h3>
             <div className="scoreboard">
               {[...gameState.players]
                 .filter(p => !p.isHost)
                 .sort((a, b) => b.score - a.score)
                 .map((player, idx) => (
-                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`}>
-                    <span className="score-rank">{idx + 1}</span>
-                    <span className="score-name">{player.name}</span>
+                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`} style={{ transition: 'all 0.3s ease' }}>
+                    <span className="score-rank" style={{ opacity: idx === 0 ? 1 : 0.5 }}>
+                      {idx === 0 ? '👑' : idx + 1}
+                    </span>
+                    <span className="score-name" style={{ fontSize: '1.1rem' }}>{player.name}</span>
                     <span className="score-points">{player.score.toLocaleString()}</span>
                   </div>
                 ))}
@@ -325,8 +373,8 @@ export default function HostPage() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <button onClick={nextRound} className="btn btn-primary btn-large">
-              {gameState.currentRound >= gameState.config.totalRounds ? 'See Final Results' : 'Next Round'}
+            <button onClick={nextRound} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px' }}>
+              {gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →'}
             </button>
           </div>
         </div>
@@ -337,39 +385,41 @@ export default function HostPage() {
         <div className="animate-slide-up">
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
             <h1 style={{
-              fontSize: '3rem',
+              fontSize: '4rem',
               background: 'var(--gradient-primary)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              marginBottom: 'var(--spacing-md)'
+              marginBottom: 'var(--spacing-md)',
+              filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.4))'
             }}>
-              Game Over!
+              CHAMPION CROWNED
             </h1>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.25rem' }}>
-              {[...gameState.players].filter(p => !p.isHost).sort((a, b) => b.score - a.score)[0]?.name} wins!
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.5rem', fontWeight: 300 }}>
+              <strong style={{ color: 'white', fontWeight: 700 }}>
+                {[...gameState.players].filter(p => !p.isHost).sort((a, b) => b.score - a.score)[0]?.name}
+              </strong> proved to be the master of deception.
             </p>
           </div>
 
-          <div className="card" style={{ maxWidth: '600px', margin: '0 auto var(--spacing-xl)' }}>
-            <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>Final Scores</h3>
+          <div className="card-glass" style={{ maxWidth: '600px', margin: '0 auto var(--spacing-xl)', padding: 'var(--spacing-2xl)' }}>
             <div className="scoreboard">
               {[...gameState.players]
                 .filter(p => !p.isHost)
                 .sort((a, b) => b.score - a.score)
                 .map((player, idx) => (
-                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`}>
-                    <span className="score-rank">
+                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`} style={{ transform: idx === 0 ? 'scale(1.05)' : 'none', border: idx === 0 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+                    <span className="score-rank" style={{ fontSize: '2rem' }}>
                       {idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
                     </span>
-                    <span className="score-name">{player.name}</span>
-                    <span className="score-points">{player.score.toLocaleString()}</span>
+                    <span className="score-name" style={{ fontSize: idx === 0 ? '1.5rem' : '1rem' }}>{player.name}</span>
+                    <span className="score-points" style={{ fontSize: idx === 0 ? '1.5rem' : '1.25rem' }}>{player.score.toLocaleString()}</span>
                   </div>
                 ))}
             </div>
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <button onClick={playAgain} className="btn btn-primary btn-large">
+            <button onClick={playAgain} className="btn btn-secondary btn-large">
               Play Again
             </button>
           </div>
