@@ -1,0 +1,30 @@
+{
+  "name": "fibbage",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "party:dev": "partykit dev",
+    "party:deploy": "partykit deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "fuse.js": "^7.0.0",
+    "next": "^14.2.0",
+    "partysocket": "^1.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.0",
+    "partykit": "^0.0.111",
+    "typescript": "^5.0.0"
+  }
+}
