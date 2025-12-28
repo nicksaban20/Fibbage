@@ -124,6 +124,13 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
+    // Check if room has a host (unless this join request is establishing the host)
+    const hasHost = this.state.players.some(p => p.isHost);
+    if (!isHost && !hasHost) {
+      this.sendError(conn, "Room not found or not active");
+      return;
+    }
+
     // Check player limit
     if (this.state.players.length >= 8) {
       this.sendError(conn, "Room is full (max 8 players)");
@@ -240,8 +247,8 @@ export default class FibbageServer implements Party.Server {
     }
 
     // Check if answer is too similar to correct answer
-    if (this.state.currentQuestion && 
-        isTooSimilarToCorrect(answer, this.state.currentQuestion.correctAnswer)) {
+    if (this.state.currentQuestion &&
+      isTooSimilarToCorrect(answer, this.state.currentQuestion.correctAnswer)) {
       this.sendError(conn, "Your answer is too similar to the real answer!");
       return;
     }
@@ -480,7 +487,7 @@ export default class FibbageServer implements Party.Server {
   // Handle player leaving
   handleLeave(conn: Party.Connection) {
     this.state.players = this.state.players.filter((p) => p.id !== conn.id);
-    
+
     // If host left, assign new host
     if (this.state.players.length > 0 && !this.state.players.some((p) => p.isHost)) {
       this.state.players[0].isHost = true;
@@ -494,16 +501,16 @@ export default class FibbageServer implements Party.Server {
   // Timer utilities
   startTimer(callback: () => void, seconds: number) {
     this.stopTimer();
-    
+
     const endTime = Date.now() + seconds * 1000;
-    
+
     this.timer = setInterval(() => {
       const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
       this.state.timeRemaining = remaining;
-      
+
       const timeMessage: ServerMessage = { type: "time-update", timeRemaining: remaining };
       this.room.broadcast(JSON.stringify(timeMessage));
-      
+
       if (remaining <= 0) {
         this.stopTimer();
         callback();
