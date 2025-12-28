@@ -113,8 +113,13 @@ export default class FibbageServer implements Party.Server {
   // Handle player joining
   handleJoin(conn: Party.Connection, name: string, isHost?: boolean) {
     // Check if player already exists
-    if (this.state.players.find((p) => p.id === conn.id)) {
-      this.sendError(conn, "Already joined");
+    const existingPlayer = this.state.players.find((p) => p.id === conn.id);
+    if (existingPlayer) {
+      // Update name if changed, but allow re-join
+      existingPlayer.name = name.trim().substring(0, 20);
+      existingPlayer.isHost = isHost || existingPlayer.isHost;
+
+      this.broadcastState();
       return;
     }
 
@@ -221,6 +226,10 @@ export default class FibbageServer implements Party.Server {
     this.state.phase = "answering";
     this.state.timeRemaining = this.state.config.answerTimeSeconds;
     this.broadcastState();
+
+    // Broadcast time immediately
+    const timeMessage: ServerMessage = { type: "time-update", timeRemaining: this.state.config.answerTimeSeconds };
+    this.room.broadcast(JSON.stringify(timeMessage));
 
     // Start countdown timer
     this.startTimer(() => {
@@ -330,6 +339,10 @@ export default class FibbageServer implements Party.Server {
     this.state.phase = "voting";
     this.state.timeRemaining = this.state.config.votingTimeSeconds;
     this.broadcastState();
+
+    // Broadcast time immediately
+    const timeMessage: ServerMessage = { type: "time-update", timeRemaining: this.state.config.votingTimeSeconds };
+    this.room.broadcast(JSON.stringify(timeMessage));
 
     this.startTimer(() => {
       this.endVotingPhase();
