@@ -126,6 +126,7 @@ export default class FibbageServer implements Party.Server {
     // Check if game is in progress
     if (this.state.phase !== "lobby") {
       this.sendError(conn, "Game already in progress");
+      conn.close();
       return;
     }
 
@@ -133,6 +134,7 @@ export default class FibbageServer implements Party.Server {
     const hasHost = this.state.players.some(p => p.isHost);
     if (!isHost && !hasHost) {
       this.sendError(conn, "Room not found or not active");
+      conn.close();
       return;
     }
 
@@ -140,12 +142,14 @@ export default class FibbageServer implements Party.Server {
     const currentPlayers = this.state.players.filter(p => !p.isHost).length;
     if (!isHost && currentPlayers >= 8) {
       this.sendError(conn, "Room is full (max 8 players)");
+      conn.close();
       return;
     }
 
     // Check for duplicate names
     if (this.state.players.find((p) => p.name.toLowerCase() === name.toLowerCase())) {
       this.sendError(conn, "Name already taken");
+      // Don't close connection here, let them try another name
       return;
     }
 
