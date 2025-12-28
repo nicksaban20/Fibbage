@@ -71,7 +71,7 @@ export default function HostPage() {
           FIBBAGE AI
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
-          {gameState.phase !== 'lobby' && gameState.phase !== 'game-over' && (
+          {gameState.phase !== 'lobby' && gameState.phase !== 'game-over' && gameState.phase !== 'question' && (
             <div className={getTimerClass()}>{timeRemaining}</div>
           )}
           <div style={{ textAlign: 'right' }}>
