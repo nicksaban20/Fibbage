@@ -420,7 +420,7 @@ export default class FibbageServer implements Party.Server {
         const fooledCount = playerAnswer.votes.length;
         if (fooledCount > 0) {
           points += fooledCount * SCORING.FOOL_PLAYER;
-          reasons.push(`Fooled \${fooledCount} player\${fooledCount > 1 ? "s" : ""}!`);
+          reasons.push(`Fooled ${fooledCount} player${fooledCount > 1 ? "s" : ""}!`);
         }
       }
 
