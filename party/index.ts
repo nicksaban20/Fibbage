@@ -258,8 +258,9 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all players have submitted
-    if (this.state.players.every((p) => p.hasSubmittedAnswer)) {
+    // Check if all players (except host) have submitted
+    const playersToSubmit = this.state.players.filter(p => !p.isHost);
+    if (playersToSubmit.length > 0 && playersToSubmit.every((p) => p.hasSubmittedAnswer)) {
       this.stopTimer();
       this.endAnsweringPhase();
     }
@@ -372,8 +373,9 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all players have voted
-    if (this.state.players.every((p) => p.hasVoted)) {
+    // Check if all players (except host) have voted
+    const playersToVote = this.state.players.filter(p => !p.isHost);
+    if (playersToVote.length > 0 && playersToVote.every((p) => p.hasVoted)) {
       this.stopTimer();
       this.endVotingPhase();
     }
