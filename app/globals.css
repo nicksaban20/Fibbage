@@ -318,6 +318,7 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
+  color: var(--color-text-primary);
 }
 
 .answer-card::before {

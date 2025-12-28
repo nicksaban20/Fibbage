@@ -106,14 +106,13 @@ export default function HostPage() {
             {/* Player list */}
             <div style={{ marginBottom: 'var(--spacing-xl)' }}>
               <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-                {gameState.players.length} player{gameState.players.length !== 1 ? 's' : ''} joined
+                {gameState.players.filter(p => !p.isHost).length} player{gameState.players.filter(p => !p.isHost).length !== 1 ? 's' : ''} joined
               </p>
               <ul className="player-list" style={{ justifyContent: 'center' }}>
-                {gameState.players.map((player) => (
-                  <li key={player.id} className={`player-chip \${player.isHost ? 'host' : ''}`}>
+                {gameState.players.filter(p => !p.isHost).map((player) => (
+                  <li key={player.id} className="player-chip">
                     <span className="player-avatar">{player.name.charAt(0).toUpperCase()}</span>
                     {player.name}
-                    {player.isHost && <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>👑</span>}
                   </li>
                 ))}
               </ul>
