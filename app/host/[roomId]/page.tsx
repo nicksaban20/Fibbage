@@ -9,7 +9,7 @@ import { DEFAULT_CONFIG } from '@/lib/game-types';
 export default function HostPage() {
   const params = useParams();
   const roomId = params.roomId as string;
-  
+
   const [config, setConfig] = useState<GameConfig>({ ...DEFAULT_CONFIG });
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -95,7 +95,7 @@ export default function HostPage() {
         <div className="animate-fade-in">
           <div className="card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
             <h2 style={{ marginBottom: 'var(--spacing-xl)' }}>Waiting for Players</h2>
-            
+
             <div style={{ marginBottom: 'var(--spacing-xl)' }}>
               <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-md)' }}>
                 Players join at <strong style={{ color: 'var(--color-primary-light)' }}>this website</strong> with code:
@@ -120,9 +120,9 @@ export default function HostPage() {
             </div>
 
             {/* Game config */}
-            <div style={{ 
-              background: 'var(--color-bg-elevated)', 
-              padding: 'var(--spacing-lg)', 
+            <div style={{
+              background: 'var(--color-bg-elevated)',
+              padding: 'var(--spacing-lg)',
               borderRadius: 'var(--radius-md)',
               marginBottom: 'var(--spacing-xl)'
             }}>
@@ -130,7 +130,7 @@ export default function HostPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--spacing-lg)' }}>
                 <div>
                   <label className="label">Rounds</label>
-                  <select 
+                  <select
                     className="input"
                     value={config.totalRounds}
                     onChange={(e) => setConfig({ ...config, totalRounds: parseInt(e.target.value) })}
@@ -143,7 +143,7 @@ export default function HostPage() {
                 </div>
                 <div>
                   <label className="label">Answer Time</label>
-                  <select 
+                  <select
                     className="input"
                     value={config.answerTimeSeconds}
                     onChange={(e) => setConfig({ ...config, answerTimeSeconds: parseInt(e.target.value) })}
@@ -156,7 +156,7 @@ export default function HostPage() {
                 </div>
                 <div>
                   <label className="label">Voting Time</label>
-                  <select 
+                  <select
                     className="input"
                     value={config.votingTimeSeconds}
                     onChange={(e) => setConfig({ ...config, votingTimeSeconds: parseInt(e.target.value) })}
@@ -170,7 +170,7 @@ export default function HostPage() {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={handleStartGame}
               className="btn btn-primary btn-large"
               disabled={gameState.players.length < 2}
@@ -206,20 +206,20 @@ export default function HostPage() {
             </div>
             <span className="question-category">{gameState.currentQuestion.category}</span>
             <h2 className="question-text" style={{ marginBottom: 'var(--spacing-xl)' }}>{gameState.currentQuestion.text}</h2>
-            
+
             <div className="status status-waiting" style={{ maxWidth: '400px', margin: '0 auto' }}>
               <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
               <span>
-                Waiting for answers... ({gameState.players.filter(p => p.hasSubmittedAnswer).length}/{gameState.players.length})
+                Waiting for answers... ({gameState.players.filter(p => p.hasSubmittedAnswer && !p.isHost).length}/{gameState.players.filter(p => !p.isHost).length})
               </span>
             </div>
 
             <ul className="player-list" style={{ justifyContent: 'center', marginTop: 'var(--spacing-lg)' }}>
-              {gameState.players.map((player) => (
-                <li 
-                  key={player.id} 
+              {gameState.players.filter(p => !p.isHost).map((player) => (
+                <li
+                  key={player.id}
                   className="player-chip"
-                  style={{ 
+                  style={{
                     background: player.hasSubmittedAnswer ? 'var(--color-success)' : 'var(--color-bg-elevated)',
                     opacity: player.hasSubmittedAnswer ? 1 : 0.5
                   }}
@@ -259,7 +259,7 @@ export default function HostPage() {
           <div className="status status-waiting" style={{ maxWidth: '400px', margin: '0 auto' }}>
             <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
             <span>
-              Waiting for votes... ({gameState.players.filter(p => p.hasVoted).length}/{gameState.players.length})
+              Waiting for votes... ({gameState.players.filter(p => p.hasVoted && !p.isHost).length}/{gameState.players.filter(p => !p.isHost).length})
             </span>
           </div>
         </div>
@@ -277,9 +277,9 @@ export default function HostPage() {
             {gameState.answers.map((answer, index) => {
               const authorPlayer = gameState.players.find(p => p.id === answer.playerId);
               return (
-                <div 
-                  key={answer.id} 
-                  className={`answer-card \${answer.isCorrect ? 'correct' : ''} \${answer.isAI ? 'ai' : ''}`}
+                <div
+                  key={answer.id}
+                  className={`answer-card ${answer.isCorrect ? 'correct' : ''} ${answer.isAI ? 'ai' : ''}`}
                   style={{ cursor: 'default' }}
                 >
                   {answer.votes.length > 0 && (
@@ -295,7 +295,7 @@ export default function HostPage() {
                     </div>
                   )}
                   <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)' }}>
-                    {answer.isCorrect ? '✓ THE TRUTH' : answer.isAI ? '🤖 AI LIE' : `Written by \${authorPlayer?.name || 'Unknown'}`}
+                    {answer.isCorrect ? '✓ THE TRUTH' : answer.isAI ? '🤖 AI LIE' : `Written by ${authorPlayer?.name || 'Unknown'}`}
                   </div>
                   <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{answer.text}</div>
                   {answer.votes.length > 0 && !answer.isCorrect && !answer.isAI && (
@@ -313,9 +313,10 @@ export default function HostPage() {
             <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>Scores</h3>
             <div className="scoreboard">
               {[...gameState.players]
+                .filter(p => !p.isHost)
                 .sort((a, b) => b.score - a.score)
                 .map((player, idx) => (
-                  <div key={player.id} className={`score-row \${idx === 0 ? 'winner' : ''}`}>
+                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`}>
                     <span className="score-rank">{idx + 1}</span>
                     <span className="score-name">{player.name}</span>
                     <span className="score-points">{player.score.toLocaleString()}</span>
@@ -336,17 +337,17 @@ export default function HostPage() {
       {gameState.phase === 'game-over' && (
         <div className="animate-slide-up">
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
-            <h1 style={{ 
-              fontSize: '3rem', 
-              background: 'var(--gradient-primary)', 
-              WebkitBackgroundClip: 'text', 
+            <h1 style={{
+              fontSize: '3rem',
+              background: 'var(--gradient-primary)',
+              WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               marginBottom: 'var(--spacing-md)'
             }}>
               Game Over!
             </h1>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.25rem' }}>
-              {[...gameState.players].sort((a, b) => b.score - a.score)[0]?.name} wins!
+              {[...gameState.players].filter(p => !p.isHost).sort((a, b) => b.score - a.score)[0]?.name} wins!
             </p>
           </div>
 
@@ -354,9 +355,10 @@ export default function HostPage() {
             <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>Final Scores</h3>
             <div className="scoreboard">
               {[...gameState.players]
+                .filter(p => !p.isHost)
                 .sort((a, b) => b.score - a.score)
                 .map((player, idx) => (
-                  <div key={player.id} className={`score-row \${idx === 0 ? 'winner' : ''}`}>
+                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`}>
                     <span className="score-rank">
                       {idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
                     </span>

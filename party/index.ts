@@ -136,8 +136,9 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
-    // Check player limit
-    if (this.state.players.length >= 8) {
+    // Check player limit (max 8 players, excluding host)
+    const currentPlayers = this.state.players.filter(p => !p.isHost).length;
+    if (!isHost && currentPlayers >= 8) {
       this.sendError(conn, "Room is full (max 8 players)");
       return;
     }
@@ -172,7 +173,8 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
-    if (this.state.players.length < 2) {
+    const playerCount = this.state.players.filter(p => !p.isHost).length;
+    if (playerCount < 2) {
       this.sendError(conn, "Need at least 2 players to start");
       return;
     }
