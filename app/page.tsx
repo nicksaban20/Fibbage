@@ -17,7 +17,7 @@ export default function HomePage() {
     for (let i = 0; i < 4; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    router.push(`/host/\${code}`);
+    router.push(`/host/${code}`);
   };
 
   const handleJoinGame = (e: React.FormEvent) => {
@@ -31,16 +31,16 @@ export default function HomePage() {
       return;
     }
     const code = joinCode.toUpperCase().trim();
-    router.push(`/play/\${code}?name=\${encodeURIComponent(playerName.trim())}`);
+    router.push(`/play/${code}?name=${encodeURIComponent(playerName.trim())}`);
   };
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
       {/* Logo & Title */}
       <div className="text-center mb-12 animate-fade-in">
-        <h1 className="mb-4" style={{ 
-          background: 'var(--gradient-primary)', 
-          WebkitBackgroundClip: 'text', 
+        <h1 className="mb-4" style={{
+          background: 'var(--gradient-primary)',
+          WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           textShadow: 'none'
         }}>
@@ -54,30 +54,30 @@ export default function HomePage() {
       {mode === 'menu' && (
         <div className="card animate-slide-up" style={{ maxWidth: '400px', width: '100%' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-            <button 
+            <button
               onClick={handleCreateGame}
               className="btn btn-primary btn-large btn-full"
             >
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Host a Game
             </button>
-            
-            <button 
+
+            <button
               onClick={() => setMode('join')}
               className="btn btn-secondary btn-large btn-full"
             >
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Join a Game
             </button>
           </div>
-          
-          <div style={{ 
-            marginTop: 'var(--spacing-xl)', 
-            paddingTop: 'var(--spacing-lg)', 
+
+          <div style={{
+            marginTop: 'var(--spacing-xl)',
+            paddingTop: 'var(--spacing-lg)',
             borderTop: '1px solid rgba(139, 92, 246, 0.2)',
             textAlign: 'center'
           }}>
@@ -90,16 +90,16 @@ export default function HomePage() {
 
       {mode === 'join' && (
         <div className="card animate-slide-up" style={{ maxWidth: '400px', width: '100%' }}>
-          <button 
+          <button
             onClick={() => { setMode('menu'); setError(''); }}
             className="btn btn-ghost"
             style={{ marginBottom: 'var(--spacing-lg)' }}
           >
             ← Back
           </button>
-          
+
           <h2 style={{ marginBottom: 'var(--spacing-xl)', textAlign: 'center' }}>Join Game</h2>
-          
+
           <form onSubmit={handleJoinGame} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
             <div>
               <label htmlFor="playerName" className="label">Your Name</label>
@@ -114,7 +114,7 @@ export default function HomePage() {
                 autoComplete="off"
               />
             </div>
-            
+
             <div>
               <label htmlFor="roomCode" className="label">Room Code</label>
               <input
@@ -128,13 +128,13 @@ export default function HomePage() {
                 autoComplete="off"
               />
             </div>
-            
+
             {error && (
               <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', textAlign: 'center' }}>
                 {error}
               </p>
             )}
-            
+
             <button type="submit" className="btn btn-primary btn-large btn-full">
               Join Game
             </button>
