@@ -5,35 +5,35 @@
   --color-bg-card: #12122a;
   --color-bg-elevated: #1a1a3a;
   --color-bg-glass: rgba(26, 26, 58, 0.8);
-  
+
   --color-primary: #8b5cf6;
   --color-primary-light: #a78bfa;
   --color-primary-dark: #6d28d9;
-  
+
   --color-secondary: #06b6d4;
   --color-secondary-light: #22d3ee;
-  
+
   --color-accent: #f472b6;
   --color-accent-light: #f9a8d4;
-  
+
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
-  
+
   --color-text-primary: #f8fafc;
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
-  
+
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
   --gradient-dark: linear-gradient(180deg, var(--color-bg-dark) 0%, #0f0f2a 100%);
-  
+
   /* Shadows */
   --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.3);
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
   --shadow-button: 0 4px 14px rgba(139, 92, 246, 0.4);
-  
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -41,17 +41,17 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border Radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
-  
+
   /* Typography */
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
@@ -59,7 +59,9 @@
 }
 
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -68,11 +70,13 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  background: var(--color-bg-dark);
 }
 
 body {
   font-family: var(--font-sans);
   background: var(--gradient-dark);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   min-height: 100vh;
   line-height: 1.6;
@@ -89,7 +93,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.05) 0%, transparent 70%);
@@ -98,15 +102,28 @@ body::before {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
-h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); }
-h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
 
 /* Container */
 .container {
@@ -491,23 +508,51 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  }
 }
 
 .animate-fade-in {
@@ -533,7 +578,9 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Phase Indicator */
@@ -568,16 +615,16 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
     --spacing-xl: 1.5rem;
     --spacing-2xl: 2rem;
   }
-  
+
   .room-code {
     font-size: 2rem;
     padding: var(--spacing-md) var(--spacing-lg);
   }
-  
+
   .answer-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .timer {
     width: 60px;
     height: 60px;
@@ -587,7 +634,10 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
