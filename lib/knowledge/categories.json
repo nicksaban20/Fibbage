@@ -1,0 +1,138 @@
+{
+    "Science": {
+        "commonFacts": [
+            "photosynthesis",
+            "gravity",
+            "evolution",
+            "DNA",
+            "atoms",
+            "molecules",
+            "cells",
+            "bacteria",
+            "virus",
+            "ecosystem"
+        ],
+        "plausibleFakes": [
+            "Quantum resonance",
+            "Molecular displacement",
+            "Thermal inversion",
+            "Photonic decay",
+            "Cellular osmosis",
+            "Nuclear synthesis",
+            "Electromagnetic flux",
+            "Ionic bonding failure",
+            "Protein misfolding",
+            "Genetic transcription error"
+        ]
+    },
+    "History": {
+        "commonFacts": [
+            "World War II",
+            "Roman Empire",
+            "Ancient Egypt",
+            "Renaissance",
+            "Industrial Revolution",
+            "American Revolution",
+            "French Revolution"
+        ],
+        "plausibleFakes": [
+            "The Treaty of Westminster",
+            "King Leopold IV",
+            "The Council of Naples",
+            "Emperor Constantine VII",
+            "The Siege of Vienna",
+            "Duke of Normandy",
+            "The Edict of Toledo",
+            "Battle of the Rhine"
+        ]
+    },
+    "Geography": {
+        "commonFacts": [
+            "Mount Everest",
+            "Amazon River",
+            "Sahara Desert",
+            "Pacific Ocean",
+            "Antarctica",
+            "Great Barrier Reef",
+            "Nile River"
+        ],
+        "plausibleFakes": [
+            "Mount Kilimanjaro",
+            "The Gobi Plains",
+            "Lake Baikal",
+            "The Andes Plateau",
+            "The Caspian Basin",
+            "The Siberian Steppe",
+            "The Congo Delta"
+        ]
+    },
+    "Entertainment": {
+        "commonFacts": [
+            "Hollywood",
+            "Broadway",
+            "Grammy Awards",
+            "Oscar",
+            "Emmy",
+            "Billboard",
+            "Netflix",
+            "Disney"
+        ],
+        "plausibleFakes": [
+            "Warner International",
+            "Columbia Records",
+            "Metro Pictures",
+            "Universal Entertainment",
+            "Paramount Productions",
+            "20th Century Media"
+        ]
+    },
+    "Sports": {
+        "commonFacts": [
+            "Olympics",
+            "World Cup",
+            "Super Bowl",
+            "NBA Finals",
+            "Wimbledon",
+            "Tour de France",
+            "FIFA"
+        ],
+        "plausibleFakes": [
+            "The International Games",
+            "European Championship",
+            "World Athletics",
+            "The Grand Tournament",
+            "Continental Cup",
+            "Premier League Finals"
+        ]
+    },
+    "Art & Literature": {
+        "commonFacts": [
+            "Leonardo da Vinci",
+            "Shakespeare",
+            "Picasso",
+            "Van Gogh",
+            "Renaissance",
+            "Impressionism",
+            "Romanticism"
+        ],
+        "plausibleFakes": [
+            "Giovanni Bellini",
+            "Francesco de' Medici",
+            "The Dutch Masters",
+            "The Venetian School",
+            "Classical Realism",
+            "Post-Baroque"
+        ]
+    },
+    "default": {
+        "commonFacts": [],
+        "plausibleFakes": [
+            "Unknown origin",
+            "Ancient tradition",
+            "Historical dispute",
+            "Lost to history",
+            "Uncertain etymology",
+            "Various sources claim"
+        ]
+    }
+}

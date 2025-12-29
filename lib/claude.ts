@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Question } from './game-types';
 import { buildQuestionContext } from './trivia';
+import { getWikipediaContext, buildRAGPromptContext, type WikiFact } from './wikipedia';
+import { validateAIAnswer } from './validation';
 
 // Initialize Anthropic client
 function getClient(apiKey?: string): Anthropic {
@@ -11,11 +13,35 @@ function getClient(apiKey?: string): Anthropic {
   return new Anthropic({ apiKey: finalApiKey });
 }
 
-// Generate a convincing fake answer using Claude
+// Extract search terms from question for Wikipedia lookup
+function extractSearchQuery(question: Question): string {
+  // Remove question words and get key terms
+  const stopWords = ['what', 'which', 'who', 'where', 'when', 'why', 'how', 'is', 'are', 'was', 'were', 'the', 'a', 'an'];
+  const words = question.text.toLowerCase()
+    .replace(/[?.,!'"]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.includes(w));
+
+  return words.slice(0, 4).join(' ');
+}
+
+// Generate a convincing fake answer using Claude with RAG context
 export async function generateFakeAnswer(question: Question, apiKey?: string): Promise<string> {
   try {
     const client = getClient(apiKey);
-    const context = buildQuestionContext(question);
+
+    // Fetch Wikipedia context for grounding
+    let wikiFact: WikiFact | null = null;
+    try {
+      const searchQuery = extractSearchQuery(question);
+      wikiFact = await getWikipediaContext(searchQuery);
+    } catch (error) {
+      console.warn('Wikipedia fetch failed, continuing without RAG context:', error);
+    }
+
+    // Build context with RAG information
+    const baseContext = buildQuestionContext(question);
+    const ragContext = buildRAGPromptContext(wikiFact, question.correctAnswer);
 
     const message = await client.messages.create({
       model: 'claude-3-haiku-20240307',
@@ -25,7 +51,9 @@ export async function generateFakeAnswer(question: Question, apiKey?: string): P
           role: 'user',
           content: `You are playing a Fibbage-style trivia game. Your job is to generate ONE convincing but WRONG answer to fool players.
 
-${context}
+${baseContext}
+
+${ragContext}
 
 IMPORTANT RULES:
 - Respond with ONLY the fake answer, nothing else
@@ -33,6 +61,7 @@ IMPORTANT RULES:
 - Make it sound believable and plausible
 - Do NOT include quotes, explanations, or commentary
 - Match the tone and format of the real answer
+- The answer MUST be factually INCORRECT
 
 Your fake answer:`
         }
@@ -51,6 +80,13 @@ Your fake answer:`
     fakeAnswer = fakeAnswer.replace(/^["']|["']$/g, '');
     // Remove any leading phrases
     fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps)[:\s]*/i, '');
+
+    // Validate the AI answer to ensure it's not too similar to correct answer
+    const validation = await validateAIAnswer(fakeAnswer, question);
+    if (!validation.isValid) {
+      console.warn('AI answer failed validation, using fallback:', validation.reason);
+      return generateFallbackFakeAnswer(question);
+    }
 
     return fakeAnswer;
   } catch (error) {

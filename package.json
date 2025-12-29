@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "party:dev": "partykit dev",
-    "party:deploy": "partykit deploy"
+    "party:deploy": "partykit deploy",
+    "test:rag": "npx ts-node test-rag.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@xenova/transformers": "^2.17.0",
     "fuse.js": "^7.0.0",
     "next": "^14.2.0",
     "partysocket": "^1.0.2",

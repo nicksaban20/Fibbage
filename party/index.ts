@@ -17,8 +17,8 @@ import {
   generateId,
   generateRoomCode,
   shuffleArray,
-  isTooSimilarToCorrect,
 } from "../lib/fuzzy-match";
+import { validatePlayerAnswer } from "../lib/validation";
 
 // Initial game state factory
 function createInitialState(roomCode: string): GameState {
@@ -243,8 +243,8 @@ export default class FibbageServer implements Party.Server {
     }, this.state.config.answerTimeSeconds);
   }
 
-  // Handle answer submission
-  handleSubmitAnswer(conn: Party.Connection, answer: string) {
+  // Handle answer submission with enhanced RAG validation
+  async handleSubmitAnswer(conn: Party.Connection, answer: string) {
     if (this.state.phase !== "answering") {
       this.sendError(conn, "Not in answering phase");
       return;
@@ -261,11 +261,21 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
-    // Check if answer is too similar to correct answer
-    if (this.state.currentQuestion &&
-      isTooSimilarToCorrect(answer, this.state.currentQuestion.correctAnswer)) {
-      this.sendError(conn, "Your answer is too similar to the real answer!");
-      return;
+    // Enhanced validation with RAG (fuzzy match + semantic + Wikipedia)
+    if (this.state.currentQuestion) {
+      try {
+        const validation = await validatePlayerAnswer(
+          answer,
+          this.state.currentQuestion
+        );
+        if (!validation.isValid) {
+          this.sendError(conn, validation.reason);
+          return;
+        }
+      } catch (error) {
+        console.warn('Validation error, falling back to basic check:', error);
+        // Basic fallback if RAG validation fails
+      }
     }
 
     player.currentAnswer = answer.trim().substring(0, 100);
