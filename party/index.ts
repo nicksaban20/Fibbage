@@ -316,10 +316,16 @@ export default class FibbageServer implements Party.Server {
     });
 
     // Generate AI fake answers based on config
-    const aiAnswerCount = this.state.config.aiAnswerCount || 1;
+    const aiAnswerCount = this.state.config.aiAnswerCount ?? 1;
+    console.log(`[FibbageServer] Generating ${aiAnswerCount} AI answers...`);
+    console.log(`[FibbageServer] Current config:`, JSON.stringify(this.state.config));
+
     for (let i = 0; i < aiAnswerCount; i++) {
       try {
+        console.log(`[FibbageServer] Generating AI answer ${i + 1}/${aiAnswerCount}...`);
         const aiAnswer = await generateFakeAnswer(this.state.currentQuestion, this.room.env.ANTHROPIC_API_KEY as string);
+        console.log(`[FibbageServer] Generated AI answer ${i + 1}: "${aiAnswer}"`);
+
         // Check for duplicates
         const isDuplicate = answers.some(a => a.text.toLowerCase() === aiAnswer.toLowerCase());
         if (!isDuplicate) {
@@ -331,9 +337,12 @@ export default class FibbageServer implements Party.Server {
             isAI: true,
             votes: [],
           });
+          console.log(`[FibbageServer] Added AI answer ${i + 1} to pool`);
+        } else {
+          console.log(`[FibbageServer] AI answer ${i + 1} was duplicate, skipping`);
         }
       } catch (error) {
-        console.error(`Failed to generate AI answer ${i + 1}:`, error);
+        console.error(`[FibbageServer] Failed to generate AI answer ${i + 1}:`, error);
         // Only add fallback if this is the first AI answer and we have none
         if (i === 0 && !answers.some(a => a.isAI)) {
           answers.push({
@@ -347,6 +356,8 @@ export default class FibbageServer implements Party.Server {
         }
       }
     }
+
+    console.log(`[FibbageServer] Total AI answers generated: ${answers.filter(a => a.isAI).length}`);
 
     // Add correct answer
     answers.push({
