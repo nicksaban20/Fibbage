@@ -44,51 +44,29 @@ function decodeHTML(text: string): string {
 
 // Fetch questions from Open Trivia Database
 export async function fetchTriviaQuestions(count: number = 10): Promise<Question[]> {
-  console.log(`[Trivia] Fetching ${count} harder questions from Open Trivia DB...`);
+  console.log(`[Trivia] Fetching ${count} medium difficulty questions from Open Trivia DB...`);
 
   try {
     // Request more questions than needed since we may filter some out
-    // Mix of medium and hard difficulty for a challenging game
-    const requestCount = Math.min(count * 2, 50); // Request double, max 50
+    const requestCount = Math.min(count * 2, 50);
 
-    // Fetch half medium, half hard questions for variety
-    const hardCount = Math.ceil(requestCount / 2);
-    const mediumCount = requestCount - hardCount;
+    // Use medium difficulty - challenging but understandable
+    const url = `https://opentdb.com/api.php?amount=${requestCount}&difficulty=medium&type=multiple`;
+    console.log(`[Trivia] Fetching from: ${url}`);
 
-    // Fetch hard questions
-    const hardUrl = `https://opentdb.com/api.php?amount=${hardCount}&difficulty=hard&type=multiple`;
-    const mediumUrl = `https://opentdb.com/api.php?amount=${mediumCount}&difficulty=medium&type=multiple`;
+    const response = await fetch(url);
 
-    console.log(`[Trivia] Fetching ${hardCount} hard + ${mediumCount} medium questions...`);
-
-    // Fetch both difficulty levels in parallel
-    const [hardResponse, mediumResponse] = await Promise.all([
-      fetch(hardUrl),
-      fetch(mediumUrl)
-    ]);
-
-    // Combine results from both responses
-    const allResults: OpenTDBQuestion[] = [];
-
-    if (hardResponse.ok) {
-      const hardData: OpenTDBResponse = await hardResponse.json();
-      if (hardData.response_code === 0 && hardData.results) {
-        allResults.push(...hardData.results);
-        console.log(`[Trivia] Got ${hardData.results.length} hard questions`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
     }
 
-    if (mediumResponse.ok) {
-      const mediumData: OpenTDBResponse = await mediumResponse.json();
-      if (mediumData.response_code === 0 && mediumData.results) {
-        allResults.push(...mediumData.results);
-        console.log(`[Trivia] Got ${mediumData.results.length} medium questions`);
-      }
+    const data: OpenTDBResponse = await response.json();
+
+    if (data.response_code !== 0 || !data.results) {
+      throw new Error(`API error code: ${data.response_code}`);
     }
 
-    if (allResults.length === 0) {
-      throw new Error('No questions received from API');
-    }
+    console.log(`[Trivia] Got ${data.results.length} questions from API`);
 
     // Filter out problematic question types
     const badQuestionPatterns = [
@@ -103,13 +81,12 @@ export async function fetchTriviaQuestions(count: number = 10): Promise<Question
       /all of the above/i,
     ];
 
-    const questions = allResults
+    const questions = data.results
       .filter(q => {
         const text = decodeHTML(q.question);
-        // Filter out NOT/EXCEPT type questions
         const isBadQuestion = badQuestionPatterns.some(pattern => pattern.test(text));
         if (isBadQuestion) {
-          console.log(`[Trivia] Filtered out bad question type: "${text.slice(0, 50)}..."`);
+          console.log(`[Trivia] Filtered out: "${text.slice(0, 50)}..."`);
         }
         return !isBadQuestion;
       })
@@ -120,14 +97,13 @@ export async function fetchTriviaQuestions(count: number = 10): Promise<Question
         category: decodeHTML(q.category),
         difficulty: q.difficulty as 'easy' | 'medium' | 'hard'
       }))
-      .slice(0, count); // Only return the requested count
+      .slice(0, count);
 
-    console.log(`[Trivia] Successfully fetched ${questions.length} valid harder questions`);
+    console.log(`[Trivia] Returning ${questions.length} valid questions`);
     return questions;
   } catch (error) {
     console.error('[Trivia] Error fetching trivia:', error);
     console.log('[Trivia] Using fallback questions');
-    // Return fallback questions
     return getFallbackQuestions().slice(0, count);
   }
 }
