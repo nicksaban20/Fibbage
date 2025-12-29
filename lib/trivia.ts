@@ -44,30 +44,41 @@ function decodeHTML(text: string): string {
 
 // Fetch questions from Open Trivia Database
 export async function fetchTriviaQuestions(count: number = 10): Promise<Question[]> {
+  console.log(`[Trivia] Fetching ${count} questions from Open Trivia DB...`);
+
   try {
-    const response = await fetch(
-      `https://opentdb.com/api.php?amount=${count}&type=multiple`
-    );
+    const url = `https://opentdb.com/api.php?amount=${count}&type=multiple`;
+    console.log(`[Trivia] Fetching from: ${url}`);
+
+    const response = await fetch(url);
+    console.log(`[Trivia] Response status: ${response.status}`);
 
     if (!response.ok) {
+      console.error(`[Trivia] HTTP error: ${response.status} ${response.statusText}`);
       throw new Error('Failed to fetch trivia questions');
     }
 
     const data: OpenTDBResponse = await response.json();
+    console.log(`[Trivia] API response_code: ${data.response_code}, results: ${data.results?.length || 0}`);
 
     if (data.response_code !== 0) {
+      console.error(`[Trivia] API error code: ${data.response_code}`);
       throw new Error('Trivia API returned an error');
     }
 
-    return data.results.map((q, index) => ({
+    const questions = data.results.map((q, index) => ({
       id: `q-${Date.now()}-${index}`,
       text: decodeHTML(q.question),
       correctAnswer: decodeHTML(q.correct_answer),
       category: decodeHTML(q.category),
       difficulty: q.difficulty as 'easy' | 'medium' | 'hard'
     }));
+
+    console.log(`[Trivia] Successfully fetched ${questions.length} questions`);
+    return questions;
   } catch (error) {
-    console.error('Error fetching trivia:', error);
+    console.error('[Trivia] Error fetching trivia:', error);
+    console.log('[Trivia] Using fallback questions');
     // Return fallback questions
     return getFallbackQuestions().slice(0, count);
   }

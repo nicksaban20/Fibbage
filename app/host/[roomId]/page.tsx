@@ -180,6 +180,19 @@ export default function HostPage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="label">AI Answers</label>
+                  <select
+                    className="input"
+                    value={config.aiAnswerCount}
+                    onChange={(e) => setConfig({ ...config, aiAnswerCount: parseInt(e.target.value) })}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {[0, 1, 2, 3, 4, 5].map(n => (
+                      <option key={n} value={n}>{n === 0 ? 'None' : n === 1 ? '1 AI Answer' : `${n} AI Answers`}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

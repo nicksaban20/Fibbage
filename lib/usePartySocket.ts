@@ -37,7 +37,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     socket.addEventListener('message', (event) => {
       try {
         const message: ServerMessage = JSON.parse(event.data);
-        
+
         switch (message.type) {
           case 'state-update':
             setGameState(message.state);
@@ -79,7 +79,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     sendMessage({ type: 'join', name, isHost });
   }, [sendMessage]);
 
-  const startGame = useCallback((config: { totalRounds: number; answerTimeSeconds: number; votingTimeSeconds: number }) => {
+  const startGame = useCallback((config: { totalRounds: number; answerTimeSeconds: number; votingTimeSeconds: number; aiAnswerCount: number }) => {
     sendMessage({ type: 'start-game', config });
   }, [sendMessage]);
 

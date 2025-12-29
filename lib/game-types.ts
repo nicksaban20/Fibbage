@@ -1,5 +1,5 @@
 // Game phase states
-export type GamePhase = 
+export type GamePhase =
   | 'lobby'
   | 'question'
   | 'answering'
@@ -43,6 +43,7 @@ export interface GameConfig {
   totalRounds: number;
   answerTimeSeconds: number;
   votingTimeSeconds: number;
+  aiAnswerCount: number; // Number of AI-generated fake answers per round
 }
 
 // Full game state
@@ -91,7 +92,8 @@ export type ServerMessage =
 export const DEFAULT_CONFIG: GameConfig = {
   totalRounds: 5,
   answerTimeSeconds: 60,
-  votingTimeSeconds: 45
+  votingTimeSeconds: 45,
+  aiAnswerCount: 1
 };
 
 // Scoring constants

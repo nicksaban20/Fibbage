@@ -188,6 +188,7 @@ export default class FibbageServer implements Party.Server {
       totalRounds: Math.min(Math.max(config.totalRounds, 1), 15),
       answerTimeSeconds: Math.min(Math.max(config.answerTimeSeconds, 15), 180),
       votingTimeSeconds: Math.min(Math.max(config.votingTimeSeconds, 15), 120),
+      aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
     };
 
     // Fetch questions
@@ -314,28 +315,37 @@ export default class FibbageServer implements Party.Server {
       }
     });
 
-    // Generate AI fake answer
-    try {
-      const aiAnswer = await generateFakeAnswer(this.state.currentQuestion, this.room.env.ANTHROPIC_API_KEY as string);
-      answers.push({
-        id: generateId(),
-        text: aiAnswer,
-        playerId: null,
-        isCorrect: false,
-        isAI: true,
-        votes: [],
-      });
-    } catch (error) {
-      console.error("Failed to generate AI answer:", error);
-      // Add a fallback
-      answers.push({
-        id: generateId(),
-        text: "Unknown",
-        playerId: null,
-        isCorrect: false,
-        isAI: true,
-        votes: [],
-      });
+    // Generate AI fake answers based on config
+    const aiAnswerCount = this.state.config.aiAnswerCount || 1;
+    for (let i = 0; i < aiAnswerCount; i++) {
+      try {
+        const aiAnswer = await generateFakeAnswer(this.state.currentQuestion, this.room.env.ANTHROPIC_API_KEY as string);
+        // Check for duplicates
+        const isDuplicate = answers.some(a => a.text.toLowerCase() === aiAnswer.toLowerCase());
+        if (!isDuplicate) {
+          answers.push({
+            id: generateId(),
+            text: aiAnswer,
+            playerId: null,
+            isCorrect: false,
+            isAI: true,
+            votes: [],
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to generate AI answer ${i + 1}:`, error);
+        // Only add fallback if this is the first AI answer and we have none
+        if (i === 0 && !answers.some(a => a.isAI)) {
+          answers.push({
+            id: generateId(),
+            text: "Unknown",
+            playerId: null,
+            isCorrect: false,
+            isAI: true,
+            votes: [],
+          });
+        }
+      }
     }
 
     // Add correct answer
