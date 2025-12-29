@@ -147,22 +147,22 @@ export default function HomePage() {
           How to Play
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-lg)' }}>
-          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>❓</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-xs)' }}>Get a Question</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>You'll get an obscure trivia fact with a missing word.</p>
           </div>
-          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>✍️</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-xs)' }}>Lie Convincingly</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>Write a fake answer to fool your friends.</p>
           </div>
-          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>🔍</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-xs)' }}>Spot the Truth</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>Find the real answer among the lies (and AI fakes!).</p>
           </div>
-          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>🏆</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-xs)' }}>Win Points</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>Score for guessing right and for fooling others.</p>
