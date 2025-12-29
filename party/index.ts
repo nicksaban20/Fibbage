@@ -306,7 +306,7 @@ export default class FibbageServer implements Party.Server {
 
     // Generate AI fake answer
     try {
-      const aiAnswer = await generateFakeAnswer(this.state.currentQuestion);
+      const aiAnswer = await generateFakeAnswer(this.state.currentQuestion, this.room.env.ANTHROPIC_API_KEY as string);
       answers.push({
         id: generateId(),
         text: aiAnswer,

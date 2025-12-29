@@ -30,7 +30,7 @@ function decodeHTML(text: string): string {
     '&eacute;': 'é',
     '&Eacute;': 'É',
   };
-  
+
   let decoded = text;
   for (const [entity, char] of Object.entries(entities)) {
     decoded = decoded.replace(new RegExp(entity, 'g'), char);
@@ -38,7 +38,7 @@ function decodeHTML(text: string): string {
   // Handle numeric entities
   decoded = decoded.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num)));
   decoded = decoded.replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-  
+
   return decoded;
 }
 
@@ -46,21 +46,21 @@ function decodeHTML(text: string): string {
 export async function fetchTriviaQuestions(count: number = 10): Promise<Question[]> {
   try {
     const response = await fetch(
-      `https://opentdb.com/api.php?amount=\${count}&type=multiple`
+      `https://opentdb.com/api.php?amount=${count}&type=multiple`
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch trivia questions');
     }
-    
+
     const data: OpenTDBResponse = await response.json();
-    
+
     if (data.response_code !== 0) {
       throw new Error('Trivia API returned an error');
     }
-    
+
     return data.results.map((q, index) => ({
-      id: `q-\${Date.now()}-\${index}`,
+      id: `q-${Date.now()}-${index}`,
       text: decodeHTML(q.question),
       correctAnswer: decodeHTML(q.correct_answer),
       category: decodeHTML(q.category),
@@ -117,10 +117,10 @@ function getFallbackQuestions(): Question[] {
 // Build context for AI to generate plausible fake answers
 export function buildQuestionContext(question: Question): string {
   return `
-Question: "\${question.text}"
-Category: \${question.category}
-Difficulty: \${question.difficulty}
-The real answer is: "\${question.correctAnswer}"
+Question: "${question.text}"
+Category: ${question.category}
+Difficulty: ${question.difficulty}
+The real answer is: "${question.correctAnswer}"
 
 Based on this, generate a fake answer that:
 1. Sounds highly plausible and could fool players

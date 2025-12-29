@@ -3,20 +3,20 @@ import type { Question } from './game-types';
 import { buildQuestionContext } from './trivia';
 
 // Initialize Anthropic client
-function getClient(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+function getClient(apiKey?: string): Anthropic {
+  const finalApiKey = apiKey || process.env.ANTHROPIC_API_KEY;
+  if (!finalApiKey) {
     throw new Error('ANTHROPIC_API_KEY environment variable is not set');
   }
-  return new Anthropic({ apiKey });
+  return new Anthropic({ apiKey: finalApiKey });
 }
 
 // Generate a convincing fake answer using Claude
-export async function generateFakeAnswer(question: Question): Promise<string> {
+export async function generateFakeAnswer(question: Question, apiKey?: string): Promise<string> {
   try {
-    const client = getClient();
+    const client = getClient(apiKey);
     const context = buildQuestionContext(question);
-    
+
     const message = await client.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 100,
@@ -25,7 +25,7 @@ export async function generateFakeAnswer(question: Question): Promise<string> {
           role: 'user',
           content: `You are playing a Fibbage-style trivia game. Your job is to generate ONE convincing but WRONG answer to fool players.
 
-\${context}
+${context}
 
 IMPORTANT RULES:
 - Respond with ONLY the fake answer, nothing else
@@ -38,20 +38,20 @@ Your fake answer:`
         }
       ]
     });
-    
+
     // Extract text from response
     const textBlock = message.content.find(block => block.type === 'text');
     if (!textBlock || textBlock.type !== 'text') {
       throw new Error('No text in response');
     }
-    
+
     // Clean up the response
     let fakeAnswer = textBlock.text.trim();
     // Remove quotes if present
     fakeAnswer = fakeAnswer.replace(/^["']|["']$/g, '');
     // Remove any leading phrases
     fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps)[:\s]*/i, '');
-    
+
     return fakeAnswer;
   } catch (error) {
     console.error('Error generating fake answer:', error);
@@ -71,11 +71,11 @@ function generateFallbackFakeAnswer(question: Question): string {
     'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
     'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
   };
-  
-  const category = Object.keys(fallbacks).find(cat => 
+
+  const category = Object.keys(fallbacks).find(cat =>
     question.category.toLowerCase().includes(cat.toLowerCase())
   ) || 'default';
-  
+
   const options = fallbacks[category];
   return options[Math.floor(Math.random() * options.length)];
 }
@@ -84,31 +84,31 @@ function generateFallbackFakeAnswer(question: Question): string {
 export function isValidFakeAnswer(fakeAnswer: string, correctAnswer: string): boolean {
   const fake = fakeAnswer.toLowerCase().trim();
   const correct = correctAnswer.toLowerCase().trim();
-  
+
   // Check if they're too similar
   if (fake === correct) return false;
   if (fake.includes(correct) || correct.includes(fake)) return false;
-  
+
   // Check Levenshtein distance for short answers
   if (correct.length < 15) {
     const distance = levenshteinDistance(fake, correct);
     if (distance < 3) return false;
   }
-  
+
   return true;
 }
 
 // Simple Levenshtein distance implementation
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
-  
+
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
   for (let j = 0; j <= a.length; j++) {
     matrix[0][j] = j;
   }
-  
+
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
@@ -122,6 +122,6 @@ function levenshteinDistance(a: string, b: string): number {
       }
     }
   }
-  
+
   return matrix[b.length][a.length];
 }
