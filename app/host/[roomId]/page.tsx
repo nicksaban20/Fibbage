@@ -100,7 +100,7 @@ export default function HostPage() {
 
             <div style={{ marginBottom: 'var(--spacing-xl)', background: 'rgba(0,0,0,0.2)', padding: 'var(--spacing-lg)', borderRadius: 'var(--radius-lg)' }}>
               <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-sm)', fontSize: '1.1rem' }}>
-                Join at <strong style={{ color: 'white' }}>fiber-ai.vercel.app</strong> with code:
+                Join at <strong style={{ color: 'white' }}>fibbage-green.vercel.app</strong> with code:
               </p>
               <div className="room-code animate-glow" style={{ fontSize: '4rem', padding: 'var(--spacing-md) var(--spacing-2xl)' }}>
                 {gameState.roomCode}
