@@ -486,7 +486,17 @@ export default class FibbageServer implements Party.Server {
     }
 
     this.state.phase = "results";
+    this.state.timeRemaining = 10; // 10 second results timer
     this.broadcastState();
+
+    // Auto-advance to next round after 10 seconds
+    this.startTimer(() => {
+      if (this.state.currentRound >= this.state.config.totalRounds) {
+        this.endGame();
+      } else {
+        this.startRound();
+      }
+    }, 10);
   }
 
   // Handle next round request

@@ -88,14 +88,15 @@ export async function validatePlayerAnswer(
 /**
  * Validate AI-generated fake answer
  * Ensures Claude's answer is actually wrong
+ * Note: Simplified to skip embedding model which doesn't work in PartyKit workerd runtime
  */
-export async function validateAIAnswer(
+export function validateAIAnswer(
     aiAnswer: string,
     question: Question
-): Promise<ValidationResult> {
+): ValidationResult {
     const correctAnswer = question.correctAnswer;
 
-    // Check fuzzy match
+    // Check fuzzy match only (embedding model doesn't work in workerd)
     if (isTooSimilarToCorrect(aiAnswer, correctAnswer, 0.25)) {
         return {
             isValid: false,
@@ -104,23 +105,13 @@ export async function validateAIAnswer(
         };
     }
 
-    // Check semantic similarity
-    try {
-        const isSemanticallyClose = await isSemanticallySimilar(
-            aiAnswer,
-            correctAnswer,
-            0.8 // Slightly more lenient for AI
-        );
-
-        if (isSemanticallyClose) {
-            return {
-                isValid: false,
-                reason: 'AI answer semantically matches correct answer',
-                confidence: 'high'
-            };
-        }
-    } catch {
-        // Continue if embedding fails
+    // Check if the AI answer is too short or generic
+    if (aiAnswer.length < 2 || aiAnswer.toLowerCase() === 'unknown') {
+        return {
+            isValid: false,
+            reason: 'AI answer too generic',
+            confidence: 'high'
+        };
     }
 
     return {

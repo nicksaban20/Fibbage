@@ -83,16 +83,18 @@ Your fake answer:`
     // Remove any leading phrases
     fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps)[:\s]*/i, '');
 
+    console.log(`[Claude] Generated fake answer: "${fakeAnswer}" for question: "${question.text.slice(0, 50)}..."`);
+
     // Validate the AI answer to ensure it's not too similar to correct answer
-    const validation = await validateAIAnswer(fakeAnswer, question);
+    const validation = validateAIAnswer(fakeAnswer, question);
     if (!validation.isValid) {
-      console.warn('AI answer failed validation, using fallback:', validation.reason);
+      console.warn(`[Claude] AI answer failed validation: ${validation.reason}, using fallback`);
       return generateFallbackFakeAnswer(question);
     }
 
     return fakeAnswer;
   } catch (error) {
-    console.error('Error generating fake answer:', error);
+    console.error('[Claude] Error generating fake answer:', error);
     // Return a generic fallback
     return generateFallbackFakeAnswer(question);
   }
