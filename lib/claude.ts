@@ -49,19 +49,21 @@ export async function generateFakeAnswer(question: Question, apiKey?: string): P
       messages: [
         {
           role: 'user',
-          content: `You are playing a Fibbage-style trivia game. Your job is to generate ONE convincing but WRONG answer to fool players.
+          content: `You are an expert at Fibbage, a trivia game where you create convincing fake answers to fool other players.
 
-${baseContext}
+QUESTION: "${question.text}"
+CATEGORY: ${question.category}
+THE REAL ANSWER IS: "${question.correctAnswer}"
 
 ${ragContext}
 
-IMPORTANT RULES:
-- Respond with ONLY the fake answer, nothing else
-- Keep it short (1-4 words typically)
-- Make it sound believable and plausible
-- Do NOT include quotes, explanations, or commentary
-- Match the tone and format of the real answer
-- The answer MUST be factually INCORRECT
+YOUR TASK: Generate ONE fake answer that:
+1. Is the SAME TYPE as the real answer (if real answer is a person's name, your fake should be a person's name; if it's a place, yours should be a place; if it's a number, yours should be a number, etc.)
+2. Sounds PLAUSIBLE for this specific question - it should be something players might actually believe
+3. Is CLEARLY WRONG - not the real answer or a correct alternative
+4. Has SIMILAR LENGTH and FORMAT to the real answer "${question.correctAnswer}"
+
+RESPOND WITH ONLY THE FAKE ANSWER - no quotes, no explanation, no punctuation unless the answer requires it.
 
 Your fake answer:`
         }

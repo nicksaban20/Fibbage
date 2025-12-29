@@ -61,20 +61,38 @@ export async function fetchTriviaQuestions(count: number = 10): Promise<Question
     const data: OpenTDBResponse = await response.json();
     console.log(`[Trivia] API response_code: ${data.response_code}, results: ${data.results?.length || 0}`);
 
-    if (data.response_code !== 0) {
-      console.error(`[Trivia] API error code: ${data.response_code}`);
-      throw new Error('Trivia API returned an error');
-    }
+    // Filter out problematic question types
+    const badQuestionPatterns = [
+      /which of these.+not/i,
+      /which of the following.+not/i,
+      /which.+is not/i,
+      /which.+isn't/i,
+      /which.+are not/i,
+      /which.+except/i,
+      /all of the following except/i,
+      /none of the above/i,
+      /all of the above/i,
+    ];
 
-    const questions = data.results.map((q, index) => ({
-      id: `q-${Date.now()}-${index}`,
-      text: decodeHTML(q.question),
-      correctAnswer: decodeHTML(q.correct_answer),
-      category: decodeHTML(q.category),
-      difficulty: q.difficulty as 'easy' | 'medium' | 'hard'
-    }));
+    const questions = data.results
+      .filter(q => {
+        const text = decodeHTML(q.question);
+        // Filter out NOT/EXCEPT type questions
+        const isBadQuestion = badQuestionPatterns.some(pattern => pattern.test(text));
+        if (isBadQuestion) {
+          console.log(`[Trivia] Filtered out bad question type: "${text.slice(0, 50)}..."`);
+        }
+        return !isBadQuestion;
+      })
+      .map((q, index) => ({
+        id: `q-${Date.now()}-${index}`,
+        text: decodeHTML(q.question),
+        correctAnswer: decodeHTML(q.correct_answer),
+        category: decodeHTML(q.category),
+        difficulty: q.difficulty as 'easy' | 'medium' | 'hard'
+      }));
 
-    console.log(`[Trivia] Successfully fetched ${questions.length} questions`);
+    console.log(`[Trivia] Successfully fetched ${questions.length} valid questions (filtered ${data.results.length - questions.length} bad questions)`);
     return questions;
   } catch (error) {
     console.error('[Trivia] Error fetching trivia:', error);
