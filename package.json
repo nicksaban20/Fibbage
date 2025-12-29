@@ -9,7 +9,7 @@
     "lint": "next lint",
     "party:dev": "partykit dev",
     "party:deploy": "partykit deploy",
-    "test:rag": "npx ts-node test-rag.ts"
+    "test:rag": "npx tsx test-rag.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
