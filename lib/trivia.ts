@@ -1,4 +1,5 @@
 import type { Question } from './game-types';
+import { generateTriviaQuestion } from './claude';
 
 interface OpenTDBQuestion {
   category: string;
@@ -42,9 +43,47 @@ function decodeHTML(text: string): string {
   return decoded;
 }
 
-// Fetch questions from Open Trivia Database
-export async function fetchTriviaQuestions(count: number = 10): Promise<Question[]> {
-  console.log(`[Trivia] Fetching ${count} medium difficulty questions from Open Trivia DB...`);
+// Main function: Try Claude first, fall back to Open Trivia DB
+export async function fetchTriviaQuestions(count: number = 10, apiKey?: string): Promise<Question[]> {
+  console.log(`[Trivia] Fetching ${count} Fibbage-style questions...`);
+
+  // Try to generate questions with Claude
+  const questions: Question[] = [];
+  const previousQuestionTexts: string[] = [];
+
+  console.log('[Trivia] Attempting Claude question generation...');
+
+  for (let i = 0; i < count; i++) {
+    try {
+      const question = await generateTriviaQuestion(apiKey, previousQuestionTexts);
+      if (question) {
+        questions.push(question);
+        previousQuestionTexts.push(question.text);
+        console.log(`[Trivia] Claude generated question ${i + 1}: "${question.text.slice(0, 50)}..."`);
+      }
+    } catch (error) {
+      console.error(`[Trivia] Claude question ${i + 1} failed:`, error);
+    }
+  }
+
+  // If we got enough questions from Claude, use them
+  if (questions.length >= count) {
+    console.log(`[Trivia] Got ${questions.length} questions from Claude`);
+    return questions;
+  }
+
+  // Fall back to Open Trivia DB for remaining questions
+  console.log(`[Trivia] Claude generated ${questions.length}/${count}, falling back to Open Trivia DB...`);
+
+  const needed = count - questions.length;
+  const fallbackQuestions = await fetchFromOpenTriviaDB(needed);
+
+  return [...questions, ...fallbackQuestions];
+}
+
+// Fetch questions from Open Trivia Database (fallback)
+async function fetchFromOpenTriviaDB(count: number): Promise<Question[]> {
+  console.log(`[Trivia] Fetching ${count} questions from Open Trivia DB as fallback...`);
 
   try {
     // Request more questions than needed since we may filter some out
@@ -102,8 +141,8 @@ export async function fetchTriviaQuestions(count: number = 10): Promise<Question
     console.log(`[Trivia] Returning ${questions.length} valid questions`);
     return questions;
   } catch (error) {
-    console.error('[Trivia] Error fetching trivia:', error);
-    console.log('[Trivia] Using fallback questions');
+    console.error('[Trivia] Error fetching from Open Trivia DB:', error);
+    console.log('[Trivia] Using static fallback questions');
     return getFallbackQuestions().slice(0, count);
   }
 }

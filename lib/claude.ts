@@ -100,6 +100,96 @@ Your fake answer:`
   }
 }
 
+// Generate a Fibbage-style trivia question using Claude
+export async function generateTriviaQuestion(apiKey?: string, previousQuestions: string[] = []): Promise<Question | null> {
+  try {
+    const client = getClient(apiKey);
+
+    const previousQuestionsContext = previousQuestions.length > 0
+      ? `\n\nAVOID THESE TOPICS (already used):\n${previousQuestions.slice(-10).join('\n')}`
+      : '';
+
+    const message = await client.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 300,
+      messages: [
+        {
+          role: 'user',
+          content: `You are generating trivia questions for FIBBAGE, a party game where:
+1. Players see a trivia question with a blank (answer hidden)
+2. They make up fake answers to fool other players
+3. They try to find the real answer among the fakes
+
+WHAT MAKES A GREAT FIBBAGE QUESTION:
+- The answer is a SURPRISING but REAL fact that can be verified
+- Average people can UNDERSTAND the question (not too obscure)
+- The answer is SHORT (1-4 words)
+- Players can easily INVENT believable fake answers
+- The topic is INTERESTING (pop culture, history, science, weird facts)
+
+EXAMPLE QUESTIONS:
+1. Q: "The original name for a butterfly was _____." | A: "Flutterby"
+2. Q: "Before 1687, clocks only had _____ hand(s)." | A: "One"
+3. Q: "The fear of long words is ironically called _____." | A: "Hippopotomonstrosesquippedaliophobia"
+4. Q: "In Switzerland, it's illegal to own just one _____." | A: "Guinea pig"
+5. Q: "The dot over the letters 'i' and 'j' is called a _____." | A: "Tittle"
+6. Q: "Honey never _____." | A: "Expires"
+7. Q: "The inventor of the Pringles can is buried in a _____." | A: "Pringles can"
+8. Q: "A group of flamingos is called a _____." | A: "Flamboyance"
+${previousQuestionsContext}
+
+Generate ONE new Fibbage question. Format your response EXACTLY like this:
+QUESTION: [your question with blank shown as _____]
+ANSWER: [the real answer, 1-4 words]
+CATEGORY: [Science/History/Nature/Entertainment/Sports/Geography/General]
+
+Generate a unique, fun question now:`
+        }
+      ]
+    });
+
+    const textBlock = message.content.find(block => block.type === 'text');
+    if (!textBlock || textBlock.type !== 'text') {
+      console.error('[Claude] No text in trivia question response');
+      return null;
+    }
+
+    const response = textBlock.text.trim();
+    console.log('[Claude] Generated trivia question response:', response);
+
+    // Parse the response
+    const questionMatch = response.match(/QUESTION:\s*(.+)/i);
+    const answerMatch = response.match(/ANSWER:\s*(.+)/i);
+    const categoryMatch = response.match(/CATEGORY:\s*(.+)/i);
+
+    if (!questionMatch || !answerMatch) {
+      console.error('[Claude] Failed to parse trivia question response');
+      return null;
+    }
+
+    const questionText = questionMatch[1].trim();
+    const answer = answerMatch[1].trim().replace(/^["']|["']$/g, '');
+    const category = categoryMatch ? categoryMatch[1].trim() : 'General';
+
+    // Basic validation
+    if (answer.length < 1 || answer.length > 50) {
+      console.error('[Claude] Answer length invalid:', answer.length);
+      return null;
+    }
+
+    return {
+      id: `claude-${Date.now()}`,
+      text: questionText.replace(/_+/g, '_____'),
+      correctAnswer: answer,
+      category: category,
+      difficulty: 'medium' as const
+    };
+  } catch (error) {
+    console.error('[Claude] Error generating trivia question:', error);
+    return null;
+  }
+}
+
 // Fallback fake answer generator
 function generateFallbackFakeAnswer(question: Question): string {
   const fallbacks: Record<string, string[]> = {

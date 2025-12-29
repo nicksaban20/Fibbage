@@ -191,8 +191,11 @@ export default class FibbageServer implements Party.Server {
       aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
     };
 
-    // Fetch questions
-    this.questions = await fetchTriviaQuestions(this.state.config.totalRounds + 2);
+    // Fetch questions (try Claude first, fall back to Open Trivia DB)
+    this.questions = await fetchTriviaQuestions(
+      this.state.config.totalRounds + 2,
+      this.room.env.ANTHROPIC_API_KEY as string
+    );
 
     // Start first round
     await this.startRound();
