@@ -35,6 +35,16 @@ function createInitialState(roomCode: string): GameState {
   };
 }
 
+// Normalize answer text to Title Case so all answers look uniform
+function normalizeAnswerCase(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export default class FibbageServer implements Party.Server {
   state: GameState;
   questions: Question[] = [];
@@ -338,12 +348,12 @@ export default class FibbageServer implements Party.Server {
     // Collect all answers
     const answers: Answer[] = [];
 
-    // Add player answers
+    // Add player answers (normalized to Title Case)
     this.state.players.forEach((p) => {
       if (p.currentAnswer) {
         answers.push({
           id: generateId(),
-          text: p.currentAnswer,
+          text: normalizeAnswerCase(p.currentAnswer),
           playerId: p.id,
           isCorrect: false,
           isAI: false,
@@ -379,7 +389,7 @@ export default class FibbageServer implements Party.Server {
           if (!isDuplicate) {
             answers.push({
               id: generateId(),
-              text: aiAnswer,
+              text: normalizeAnswerCase(aiAnswer),
               playerId: null,
               isCorrect: false,
               isAI: true,
@@ -406,10 +416,10 @@ export default class FibbageServer implements Party.Server {
 
     console.log(`[FibbageServer] Total AI answers generated: ${answers.filter(a => a.isAI).length}`);
 
-    // Add correct answer
+    // Add correct answer (normalized)
     answers.push({
       id: generateId(),
-      text: this.state.currentQuestion.correctAnswer,
+      text: normalizeAnswerCase(this.state.currentQuestion.correctAnswer),
       playerId: null,
       isCorrect: true,
       isAI: false,
