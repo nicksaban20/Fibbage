@@ -46,6 +46,7 @@ export interface GameConfig {
   answerTimeSeconds: number;
   votingTimeSeconds: number;
   aiAnswerCount: number; // Number of AI-generated fake answers per round
+  verifyAnswers: boolean;
 }
 
 // Full game state
