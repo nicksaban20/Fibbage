@@ -205,6 +205,14 @@ REQUIREMENTS:
 - Use _____ for each word in the answer (e.g., "_____ _____" for a 2-word answer)
 - Avoid common trivia like the plague (no flamingos, no butterflies, no octopuses)
 - Be CREATIVE - surprise the players with how wild the fact is!
+
+EXAMPLES OF DIFFICULTY:
+BAD (Too Easy): "The _____ is known as the 'king of the jungle'." (Answer: Lion) -> REJECT THIS.
+BAD (Common Fact): "The Eiffel Tower is located in _____." (Answer: Paris) -> REJECT THIS.
+GOOD (Specific & Obscure): "The first item ever sold on eBay was a broken _____ pointer." (Answer: Laser)
+GOOD (Weird History): "During WWII, the US military tried to train _____ to guide missiles." (Answer: Pigeons)
+GOOD (Bizarre): "The only letter that doesn't appear in any US state name is _____." (Answer: Q)
+
 ${previousQuestionsContext}
 
 FORMAT:
