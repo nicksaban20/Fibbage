@@ -37,8 +37,13 @@ function createInitialState(roomCode: string): GameState {
 
 // Normalize answer text to UPPERCASE so all answers look uniform and hide typing differences
 function normalizeAnswerCase(text: string): string {
-  if (!text || text.trim().length === 0) return text;
-  return text.trim().toUpperCase();
+  if (!text || text.trim().length === 0) {
+    console.log('[FibbageServer] normalizeAnswerCase: Empty input');
+    return text;
+  }
+  const normalized = text.trim().toUpperCase();
+  console.log(`[FibbageServer] normalizeAnswerCase: "${text}" -> "${normalized}"`);
+  return normalized;
 }
 
 export default class FibbageServer implements Party.Server {
@@ -449,6 +454,10 @@ export default class FibbageServer implements Party.Server {
     // Start voting phase
     this.state.phase = "voting";
     this.state.timeRemaining = this.state.config.votingTimeSeconds;
+
+    // Log ALL answers to verify normalization
+    console.log('[FibbageServer] Starting voting with answers:', JSON.stringify(this.state.answers.map(a => ({ text: a.text, isAI: a.isAI })), null, 2));
+
     this.broadcastState();
 
     // Broadcast time immediately
