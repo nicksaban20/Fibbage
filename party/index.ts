@@ -253,7 +253,8 @@ export default class FibbageServer implements Party.Server {
     // Fetch only the first question (on-demand)
     const firstQuestion = await fetchSingleQuestion(
       this.room.env.ANTHROPIC_API_KEY as string,
-      []
+      [],
+      this.state.config.verifyAnswers // Pass verification flag
     );
     this.questions = [firstQuestion];
 
@@ -283,7 +284,12 @@ export default class FibbageServer implements Party.Server {
         // Show loading while waiting for pre-fetched question
         this.state.phase = "loading";
         this.broadcastState();
-        question = await this.nextQuestionPromise;
+        // Generate question
+        question = await generateTriviaQuestion(
+          this.room.env.ANTHROPIC_API_KEY as string,
+          this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
+          this.state.config.verifyAnswers // Pass verification flag
+        );
         this.nextQuestionPromise = null;
       } else {
         // No pre-fetch, fetch one now with loading screen
@@ -291,7 +297,8 @@ export default class FibbageServer implements Party.Server {
         this.broadcastState();
         question = await fetchSingleQuestion(
           this.room.env.ANTHROPIC_API_KEY as string,
-          this.state.currentQuestion ? [this.state.currentQuestion.text] : []
+          this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
+          this.state.config.verifyAnswers // Pass verification flag
         );
       }
     }

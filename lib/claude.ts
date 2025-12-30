@@ -137,59 +137,65 @@ Reply with just the fake answer, nothing else:`
   return generateFallbackFakeAnswer(question);
 }
 
+import { verifyFactWithSearch } from './verification';
+
 // Generate a Fibbage-style trivia question using Claude
-export async function generateTriviaQuestion(apiKey?: string, previousQuestions: string[] = []): Promise<Question | null> {
-  try {
-    const client = getClient(apiKey);
+export async function generateTriviaQuestion(apiKey?: string, previousQuestions: string[] = [], shouldVerify: boolean = false): Promise<Question | null> {
+  const MAX_GENERATION_ATTEMPTS = 3;
 
-    // Random category for variety
-    const categories = [
-      'Science & Nature', 'History', 'Geography', 'Entertainment',
-      'Sports', 'Art & Literature', 'Music', 'Food & Drink',
-      'Animals', 'Technology', 'Pop Culture', 'Movies & TV',
-      'Mythology', 'Language & Words', 'Weird Facts'
-    ];
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
+    try {
+      const client = getClient(apiKey);
 
-    // Random style modifiers for variety between games
-    const styles = [
-      'obscure and little-known',
-      'surprising and counterintuitive',
-      'funny or amusing',
-      'mind-blowing',
-      'historical',
-      'scientific',
-      'cultural',
-      'bizarre but true'
-    ];
-    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
 
-    // Temporal seed to vary questions by time (changes every hour)
-    const now = new Date();
-    const timeSeed = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
+      // Random category for variety
+      const categories = [
+        'Science & Nature', 'History', 'Geography', 'Entertainment',
+        'Sports', 'Art & Literature', 'Music', 'Food & Drink',
+        'Animals', 'Technology', 'Pop Culture', 'Movies & TV',
+        'Mythology', 'Language & Words', 'Weird Facts'
+      ];
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
 
-    // Random sub-topic for even more variety
-    const subTopics = [
-      'from the 1800s', 'from ancient times', 'about famous people',
-      'about inventions', 'about world records', 'about origins of things',
-      'about unusual laws', 'about body parts', 'about countries',
-      'about space', 'about the ocean', 'about plants'
-    ];
-    const randomSubTopic = subTopics[Math.floor(Math.random() * subTopics.length)];
+      // Random style modifiers for variety between games
+      const styles = [
+        'obscure and little-known',
+        'surprising and counterintuitive',
+        'funny or amusing',
+        'mind-blowing',
+        'historical',
+        'scientific',
+        'cultural',
+        'bizarre but true'
+      ];
+      const randomStyle = styles[Math.floor(Math.random() * styles.length)];
 
-    const previousQuestionsContext = previousQuestions.length > 0
-      ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
-      : '';
+      // Temporal seed to vary questions by time (changes every hour)
+      const now = new Date();
+      const timeSeed = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
 
-    const response = await withRetry(async () => {
-      const message = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        temperature: 0.95, // Even higher for maximum variety
-        messages: [
-          {
-            role: 'user',
-            content: `Generate ONE unique Fibbage trivia question.
+      // Random sub-topic for even more variety
+      const subTopics = [
+        'from the 1800s', 'from ancient times', 'about famous people',
+        'about inventions', 'about world records', 'about origins of things',
+        'about unusual laws', 'about body parts', 'about countries',
+        'about space', 'about the ocean', 'about plants'
+      ];
+      const randomSubTopic = subTopics[Math.floor(Math.random() * subTopics.length)];
+
+      const previousQuestionsContext = previousQuestions.length > 0
+        ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
+        : '';
+
+      const response = await withRetry(async () => {
+        const message = await client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 300,
+          temperature: 0.95, // Even higher for maximum variety
+          messages: [
+            {
+              role: 'user',
+              content: `Generate ONE unique Fibbage trivia question.
 
 TOPIC: ${randomCategory} - specifically something ${randomStyle} ${randomSubTopic}
 SESSION: ${timeSeed}-${Math.random().toString(36).slice(2, 6)}
@@ -222,135 +228,122 @@ FORMAT:
 QUESTION: [question with _____ for EACH word in the answer]
 ANSWER: [1-4 word answer]
 CATEGORY: ${randomCategory}`
-          }
-        ]
+            }
+          ]
+        });
+        return message;
       });
-      return message;
-    });
 
-    const textBlock = response.content.find(block => block.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      console.error('[Claude] No text in trivia question response');
+      const textBlock = response.content.find(block => block.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') {
+        console.error('[Claude] No text in trivia question response');
+        return null;
+      }
+
+      const responseText = textBlock.text.trim();
+      console.log('[Claude] Generated trivia question response:', responseText);
+
+      // Parse response - using simpler regex patterns for compatibility
+      const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
+      const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
+      const categoryMatch = responseText.match(/CATEGORY:\s*([^\n]+)/i);
+
+      if (!questionMatch || !answerMatch) {
+        console.error('[Claude] Failed to parse trivia question response');
+        return null;
+      }
+
+      const questionText = questionMatch[1].trim();
+      let answer = answerMatch[1].trim();
+      // Clean up answer - remove quotes, extra whitespace
+      answer = answer.replace(/^[\"'\s]+|[\"'\s]+$/g, '');
+      const category = categoryMatch ? categoryMatch[1].trim().replace(/^[\"'\s]+|[\"'\s]+$/g, '') : 'General';
+
+      // Validation
+      if (answer.length < 1 || answer.length > 60) {
+        console.error('[Claude] Answer length invalid:', answer.length);
+        return null;
+      }
+
+      if (questionText.length < 10) {
+        formattedQuestion = formattedQuestion.replace(/\.\s*$/, '') + ' ' + blanks + '.';
+      }
+
+      return {
+        id: `claude-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        text: formattedQuestion,
+        correctAnswer: answer,
+        category: category,
+        difficulty: 'medium' as const
+      };
+    } catch (error) {
+      console.error('[Claude] Error generating trivia question after retries:', error);
       return null;
     }
+  }
 
-    const responseText = textBlock.text.trim();
-    console.log('[Claude] Generated trivia question response:', responseText);
-
-    // Parse response - using simpler regex patterns for compatibility
-    const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
-    const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
-    const categoryMatch = responseText.match(/CATEGORY:\s*([^\n]+)/i);
-
-    if (!questionMatch || !answerMatch) {
-      console.error('[Claude] Failed to parse trivia question response');
-      return null;
-    }
-
-    const questionText = questionMatch[1].trim();
-    let answer = answerMatch[1].trim();
-    // Clean up answer - remove quotes, extra whitespace
-    answer = answer.replace(/^[\"'\s]+|[\"'\s]+$/g, '');
-    const category = categoryMatch ? categoryMatch[1].trim().replace(/^[\"'\s]+|[\"'\s]+$/g, '') : 'General';
-
-    // Validation
-    if (answer.length < 1 || answer.length > 60) {
-      console.error('[Claude] Answer length invalid:', answer.length);
-      return null;
-    }
-
-    if (questionText.length < 10) {
-      console.error('[Claude] Question too short:', questionText.length);
-      return null;
-    }
-
-    // Count words in answer to format blanks correctly
-    const wordCount = answer.split(/\s+/).filter(w => w.length > 0).length;
-    const blanks = Array(wordCount).fill('_____').join(' ');
-
-    // Replace any underscore pattern with the correct number of blanks
-    let formattedQuestion = questionText.replace(/_+(?:\s+_+)*/g, blanks);
-
-    // If no blanks found, append them
-    if (!formattedQuestion.includes('_____')) {
-      formattedQuestion = formattedQuestion.replace(/\.\s*$/, '') + ' ' + blanks + '.';
-    }
-
-    return {
-      id: `claude-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      text: formattedQuestion,
-      correctAnswer: answer,
-      category: category,
-      difficulty: 'medium' as const
+  // Fallback fake answer generator
+  function generateFallbackFakeAnswer(question: Question): string {
+    const fallbacks: Record<string, string[]> = {
+      'Science': ['Quantum fluctuation', 'Molecular resonance', 'Thermal dynamics', 'Photosynthetic reaction'],
+      'History': ['King George III', 'The Romans', 'Ancient Egypt', 'The Ming Dynasty'],
+      'Geography': ['The Amazon', 'Mount Kilimanjaro', 'The Sahara', 'Greenland'],
+      'Entertainment': ['Steven Spielberg', 'The Beatles', 'Hollywood Studios', 'MGM Studios'],
+      'Sports': ['The Olympics', 'World Cup 1966', 'Jesse Owens', 'Babe Ruth'],
+      'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
+      'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
     };
-  } catch (error) {
-    console.error('[Claude] Error generating trivia question after retries:', error);
-    return null;
-  }
-}
 
-// Fallback fake answer generator
-function generateFallbackFakeAnswer(question: Question): string {
-  const fallbacks: Record<string, string[]> = {
-    'Science': ['Quantum fluctuation', 'Molecular resonance', 'Thermal dynamics', 'Photosynthetic reaction'],
-    'History': ['King George III', 'The Romans', 'Ancient Egypt', 'The Ming Dynasty'],
-    'Geography': ['The Amazon', 'Mount Kilimanjaro', 'The Sahara', 'Greenland'],
-    'Entertainment': ['Steven Spielberg', 'The Beatles', 'Hollywood Studios', 'MGM Studios'],
-    'Sports': ['The Olympics', 'World Cup 1966', 'Jesse Owens', 'Babe Ruth'],
-    'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
-    'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
-  };
+    const category = Object.keys(fallbacks).find(cat =>
+      question.category.toLowerCase().includes(cat.toLowerCase())
+    ) || 'default';
 
-  const category = Object.keys(fallbacks).find(cat =>
-    question.category.toLowerCase().includes(cat.toLowerCase())
-  ) || 'default';
-
-  const options = fallbacks[category];
-  return options[Math.floor(Math.random() * options.length)];
-}
-
-// Validate that an answer is not too similar to the correct answer
-export function isValidFakeAnswer(fakeAnswer: string, correctAnswer: string): boolean {
-  const fake = fakeAnswer.toLowerCase().trim();
-  const correct = correctAnswer.toLowerCase().trim();
-
-  // Check if they're too similar
-  if (fake === correct) return false;
-  if (fake.includes(correct) || correct.includes(fake)) return false;
-
-  // Check Levenshtein distance for short answers
-  if (correct.length < 15) {
-    const distance = levenshteinDistance(fake, correct);
-    if (distance < 3) return false;
+    const options = fallbacks[category];
+    return options[Math.floor(Math.random() * options.length)];
   }
 
-  return true;
-}
+  // Validate that an answer is not too similar to the correct answer
+  export function isValidFakeAnswer(fakeAnswer: string, correctAnswer: string): boolean {
+    const fake = fakeAnswer.toLowerCase().trim();
+    const correct = correctAnswer.toLowerCase().trim();
 
-// Simple Levenshtein distance implementation
-function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = [];
+    // Check if they're too similar
+    if (fake === correct) return false;
+    if (fake.includes(correct) || correct.includes(fake)) return false;
 
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
+    // Check Levenshtein distance for short answers
+    if (correct.length < 15) {
+      const distance = levenshteinDistance(fake, correct);
+      if (distance < 3) return false;
+    }
+
+    return true;
   }
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
 
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
+  // Simple Levenshtein distance implementation
+  function levenshteinDistance(a: string, b: string): number {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
       }
     }
-  }
 
-  return matrix[b.length][a.length];
-}
+    return matrix[b.length][a.length];
+  }

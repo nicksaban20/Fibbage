@@ -215,6 +215,19 @@ export default function HostPage() {
                     ))}
                   </select>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
+                  <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={config.verifyAnswers}
+                      onChange={(e) => setConfig({ ...config, verifyAnswers: e.target.checked })}
+                      style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                      Verify Answers <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Slower)</span>
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
 

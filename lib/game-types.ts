@@ -96,7 +96,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   totalRounds: 5,
   answerTimeSeconds: 60,
   votingTimeSeconds: 45,
-  aiAnswerCount: 1
+  aiAnswerCount: 1,
+  verifyAnswers: false,
 };
 
 // Scoring constants
