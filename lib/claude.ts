@@ -224,10 +224,22 @@ BANNED TOPICS (DO NOT GENERATE):
 - "Eiffel Tower" / Paris
 - "Mona Lisa" / Da Vinci
 
-EXAMPLES OF GOOD QUESTIONS (Open-Ended & Obscure):
-GOOD (Specific & Obscure): "The first item ever sold on eBay was a broken _____ pointer." (Answer: Laser) -> GOOD (Could be: Laser, Stick, Mouse, Clock, Toy, etc.)
-GOOD (Weird History): "During WWII, the US military tried to train _____ to guide missiles." (Answer: Pigeons) -> GOOD (Could be: Dogs, Cats, Bats, Rats, etc.)
-GOOD (Open Context): "In 1850, the city of Paris passed a law forbidding women from _____." (Answer: Wearing Pants) -> GOOD (Could be: Smoking, Walking, Singing, etc.)
+EXAMPLES OF PERFECT FIBBAGE QUESTIONS (Study the style):
+- "Measurements show that the Eifel Tower shrinks by about six inches during the _____." (Answer: Winter)
+- "In 1386, a pig in France was executed by public hanging for the murder of a _____." (Answer: Child)
+- "The tiny plastic bit at the end of a shoelace is called an _____." (Answer: Aglet)
+- "A group of pugs is surprisingly referred to as a _____." (Answer: Grumble)
+- "The Code of Hammurabi decreed that bartenders who watered down beer should be _____." (Answer: Executed)
+- "In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____." (Answer: Dead)
+- "The only letter that does not appear in any U.S. state name is _____." (Answer: Q)
+- "Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____." (Answer: Pooping)
+- "The inventor of the Pringles can is now buried in a _____." (Answer: Pringles Can)
+- "The total weight of all the ants on Earth is comparable to the total weight of all the _____." (Answer: Humans)
+- "Harry Houdini once threatened to shoot all of these people: _____." (Answer: Psychics)
+- "The originally planned name for the search engine that became Google was _____." (Answer: Backrub)
+- "Mike Tyson once tweeted 'I'm a bad _____.'" (Answer: Bowler)
+- "Leo Granit Kraft is a world champion in an unusual sport that combines boxing and _____." (Answer: Chess)
+- "Dasypygal is an adjective meaning 'having _____ buttocks'." (Answer: Hairy)
 
 ${previousQuestionsContext}
 
