@@ -212,6 +212,11 @@ REQUIREMENTS:
 - Must be TRUE and verifiable
 - Must be UNBELIEVABLY OBSCURE (Graduate/Archive level difficulty)
 - Facts should sound fake but be 100% true (The Fibbage Effect)
+- **QUESTION STRUCTURE:** 
+  - **MAX LENGTH:** 15-20 words. Shorter is better.
+  - **STYLE:** Punchy, direct, and concise. No fluff.
+  - **RULE:** If you can remove a word without changing the fact, REMOVE IT.
+  - AVOID lengthy preambles. Start directly with the subject/action if possible.
 - Answer should be 1-4 words
 - Use _____ for each word in the answer (e.g., "_____ _____" for a 2-word answer)
 - Avoid common trivia like the plague (no flamingos, no butterflies, no octopuses)
@@ -236,10 +241,8 @@ REQUIREMENTS:
 
 ANSWER QUALITY (CRITICAL):
 - **LENGTH PREFERENCE:**
-  - 1 WORD: Highly Preferred (Aim for 70% of the time).
-  - 2 WORDS: Occasional (25% of the time).
-  - 3 WORDS: Rare (5% of the time).
-  - 4+ WORDS: NEVER.
+  - 1 WORD: Required (100% of the time).
+  - 2+ WORDS: NEVER.
 - The answer MUST be a simple, common word or phrase (something a drunk person could guess).
 - AVOID "Jeopardy Answers" or complex legal/medical terms.
 - AVOID answers that are too specific to be guessed (e.g. "Palimony Suit" -> BAD, "Lawsuit" -> GOOD).
