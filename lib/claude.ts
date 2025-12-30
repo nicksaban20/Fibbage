@@ -57,11 +57,12 @@ CATEGORY: ${question.category}
 REAL ANSWER (do NOT use this): "${question.correctAnswer}"
 
 Rules:
-- Same format/length as real answer
+- MUST BE ONE WORD ONLY (No exceptions)
 - Sounds plausible but is WRONG
-- NO quotes, NO explanation, just the fake answer
+- NO quotes, NO explanation, just the output
+- If the blank allows "a ____", return just the noun (e.g. "Toaster", not "a toaster")
 
-Fake answer:`
+Fake answer (1 word):`
           }
         ]
       });
@@ -118,7 +119,9 @@ async function generateDifferentFakeAnswer(question: Question, apiKey: string | 
 Question: "${question.text}"
 Category: ${question.category}
 
-Reply with just the fake answer, nothing else:`
+Constraint: ONE WORD ONLY.
+
+Reply with just the one-word fake answer:`
         }
       ]
     });
