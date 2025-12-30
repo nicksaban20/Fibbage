@@ -390,12 +390,13 @@ export default class FibbageServer implements Party.Server {
       aiResults.forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value) {
           const aiAnswer = result.value;
-          // Check for duplicates
-          const isDuplicate = answers.some(a => a.text.toLowerCase() === aiAnswer.toLowerCase());
+          // Check for duplicates (compare normalized versions)
+          const normalizedAI = normalizeAnswerCase(aiAnswer);
+          const isDuplicate = answers.some(a => a.text.toLowerCase() === normalizedAI.toLowerCase());
           if (!isDuplicate) {
             answers.push({
               id: generateId(),
-              text: normalizeAnswerCase(aiAnswer),
+              text: normalizedAI,
               playerId: null,
               isCorrect: false,
               isAI: true,
@@ -411,7 +412,7 @@ export default class FibbageServer implements Party.Server {
       if (!answers.some(a => a.isAI)) {
         answers.push({
           id: generateId(),
-          text: "Unknown",
+          text: normalizeAnswerCase("Unknown"),
           playerId: null,
           isCorrect: false,
           isAI: true,
