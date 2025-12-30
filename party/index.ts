@@ -282,19 +282,22 @@ export default class FibbageServer implements Party.Server {
     let question = this.questions.shift();
 
     // If no question in queue, wait for pre-fetched one or fetch new one
+    // If no question in queue, wait for pre-fetched one or fetch new one
     if (!question) {
       if (this.nextQuestionPromise) {
         // Show loading while waiting for pre-fetched question
         this.state.phase = "loading";
         this.broadcastState();
-        // Generate question
-        question = await generateTriviaQuestion(
-          this.room.env.ANTHROPIC_API_KEY as string,
-          this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
-          this.state.config.verifyAnswers // Pass verification flag
-        );
+        try {
+          question = await this.nextQuestionPromise;
+        } catch (e) {
+          console.error('[FibbageServer] Pre-fetch promise failed:', e);
+        }
         this.nextQuestionPromise = null;
-      } else {
+      }
+
+      // If still no question (pre-fetch failed or wasn't set), fetch one now
+      if (!question) {
         // No pre-fetch, fetch one now with loading screen
         this.state.phase = "loading";
         this.broadcastState();
@@ -311,7 +314,11 @@ export default class FibbageServer implements Party.Server {
       this.broadcastLog(`🎯 New Question (${question.source?.toUpperCase() || 'UNKNOWN'}): "${question.text.slice(0, 40)}..."`);
     } else {
       this.broadcastLog('⚠️ Failed to generate question, using emergency fallback');
-      this.state.currentQuestion = getFallbackQuestions()[0];
+      const fallbacks = getFallbackQuestions();
+      // Pick random fallback
+      this.state.currentQuestion = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      // Update local variable to prevent crash below
+      question = this.state.currentQuestion;
     }
 
     this.state.phase = "question";
@@ -319,9 +326,12 @@ export default class FibbageServer implements Party.Server {
 
     // Pre-fetch next question in background if not last round
     if (this.state.currentRound < this.state.config.totalRounds) {
+      // Safe access to text
+      const previousText = question ? question.text : "";
       this.nextQuestionPromise = fetchSingleQuestion(
         this.room.env.ANTHROPIC_API_KEY as string,
-        [question.text]
+        [previousText],
+        this.state.config.verifyAnswers
       );
     }
 
