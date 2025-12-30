@@ -188,10 +188,10 @@ CATEGORY: [Science/History/Nature/Entertainment/General]`
     const responseText = textBlock.text.trim();
     console.log('[Claude] Generated trivia question response:', responseText);
 
-    // More robust parsing - handle multiline and variations
-    const questionMatch = responseText.match(/QUESTION:\s*(.+?)(?=\n|ANSWER:|$)/is);
-    const answerMatch = responseText.match(/ANSWER:\s*(.+?)(?=\n|CATEGORY:|$)/is);
-    const categoryMatch = responseText.match(/CATEGORY:\s*(.+?)(?=\n|$)/is);
+    // Parse response - using simpler regex patterns for compatibility
+    const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
+    const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
+    const categoryMatch = responseText.match(/CATEGORY:\s*([^\n]+)/i);
 
     if (!questionMatch || !answerMatch) {
       console.error('[Claude] Failed to parse trivia question response');
