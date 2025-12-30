@@ -153,40 +153,13 @@ export async function generateTriviaQuestion(
       const client = getClient(apiKey);
 
 
-      // Random category for variety
-      const categories = [
-        'Science & Nature', 'History', 'Geography', 'Entertainment',
-        'Sports', 'Art & Literature', 'Music', 'Food & Drink',
-        'Animals', 'Technology', 'Pop Culture', 'Movies & TV',
-        'Mythology', 'Language & Words', 'Weird Facts'
-      ];
-      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-
-      // Random style modifiers for variety between games
-      const styles = [
-        'obscure and little-known',
-        'surprising and counterintuitive',
-        'funny or amusing',
-        'mind-blowing',
-        'historical',
-        'scientific',
-        'cultural',
-        'bizarre but true'
-      ];
-      const randomStyle = styles[Math.floor(Math.random() * styles.length)];
-
       // Temporal seed to vary questions by time (changes every hour)
       const now = new Date();
       const timeSeed = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
 
-      // Random sub-topic for even more variety
-      const subTopics = [
-        'from the 1800s', 'from ancient times', 'about famous people',
-        'about inventions', 'about world records', 'about origins of things',
-        'about unusual laws', 'about body parts', 'about countries',
-        'about space', 'about the ocean', 'about plants'
-      ];
-      const randomSubTopic = subTopics[Math.floor(Math.random() * subTopics.length)];
+      // Random general category for metadata (not used in prompt)
+      const categories = ['General', 'Weird Facts', 'History', 'Science', 'Nature', 'Human Behavior'];
+      const randomCategoryLabel = categories[Math.floor(Math.random() * categories.length)];
 
       const previousQuestionsContext = previousQuestions.length > 0
         ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
@@ -202,13 +175,11 @@ export async function generateTriviaQuestion(
               role: 'user',
               content: `Generate ONE unique Fibbage trivia question.
 
-TOPIC: ${randomCategory} - specifically something ${randomStyle}
 SESSION: ${timeSeed}-${Math.random().toString(36).slice(2, 6)}
 
 FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
 
 REQUIREMENTS:
-- Must be ${randomStyle} fact about ${randomCategory}
 - Must be TRUE and verifiable
 - Must be UNBELIEVABLY OBSCURE (Graduate/Archive level difficulty)
 - Facts should sound fake but be 100% true (The Fibbage Effect)
@@ -281,8 +252,7 @@ ${previousQuestionsContext}
 
 FORMAT:
 QUESTION: [question with _____ for EACH word in the answer]
-ANSWER: [1-4 word answer]
-CATEGORY: ${randomCategory}`
+ANSWER: [1 word answer]`
             }
           ]
         });
@@ -301,7 +271,6 @@ CATEGORY: ${randomCategory}`
       // Parse response - using simpler regex patterns for compatibility
       const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
       const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
-      const categoryMatch = responseText.match(/CATEGORY:\s*([^\n]+)/i);
 
       // Verification Step
       if (shouldVerify) {
@@ -323,7 +292,9 @@ CATEGORY: ${randomCategory}`
       let answer = answerMatch[1].trim();
       // Clean up answer - remove quotes, extra whitespace
       answer = answer.replace(/^[\"'\s]+|[\"'\s]+$/g, '');
-      const category = categoryMatch ? categoryMatch[1].trim().replace(/^[\"'\s]+|[\"'\s]+$/g, '') : 'General';
+
+      // Use the random label we picked earlier, since AI isn't generating one anymore
+      const category = randomCategoryLabel;
 
       // Validation
       if (answer.length < 1 || answer.length > 60) {
