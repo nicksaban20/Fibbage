@@ -48,6 +48,7 @@ export interface GameConfig {
   votingTimeSeconds: number;
   aiAnswerCount: number; // Number of AI-generated fake answers per round
   verifyAnswers: boolean;
+  model: string;
 }
 
 // Full game state
@@ -100,6 +101,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   votingTimeSeconds: 45,
   aiAnswerCount: 1,
   verifyAnswers: false,
+  model: 'claude-haiku-4-5-20251001',
 };
 
 // Scoring constants

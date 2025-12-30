@@ -247,6 +247,8 @@ export default class FibbageServer implements Party.Server {
       answerTimeSeconds: Math.min(Math.max(config.answerTimeSeconds, 15), 180),
       votingTimeSeconds: Math.min(Math.max(config.votingTimeSeconds, 15), 120),
       aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
+      verifyAnswers: config.verifyAnswers,
+      model: config.model || 'claude-haiku-4-5-20251001',
     };
 
     // Show loading phase while fetching first question
@@ -257,7 +259,8 @@ export default class FibbageServer implements Party.Server {
     const firstQuestion = await fetchSingleQuestion(
       this.room.env.ANTHROPIC_API_KEY as string,
       [],
-      this.state.config.verifyAnswers // Pass verification flag
+      this.state.config.verifyAnswers, // Pass verification flag
+      this.state.config.model // Pass selected model
     );
     this.questions = [firstQuestion];
 
@@ -304,7 +307,8 @@ export default class FibbageServer implements Party.Server {
         question = await fetchSingleQuestion(
           this.room.env.ANTHROPIC_API_KEY as string,
           this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
-          this.state.config.verifyAnswers // Pass verification flag
+          this.state.config.verifyAnswers, // Pass verification flag
+          this.state.config.model
         );
       }
     }
@@ -331,7 +335,8 @@ export default class FibbageServer implements Party.Server {
       this.nextQuestionPromise = fetchSingleQuestion(
         this.room.env.ANTHROPIC_API_KEY as string,
         [previousText],
-        this.state.config.verifyAnswers
+        this.state.config.verifyAnswers,
+        this.state.config.model
       );
     }
 

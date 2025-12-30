@@ -228,6 +228,18 @@ export default function HostPage() {
                     </span>
                   </label>
                 </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label className="label">AI Model</label>
+                  <select
+                    className="input"
+                    value={config.model || 'claude-haiku-4-5-20251001'}
+                    onChange={(e) => setConfig({ ...config, model: e.target.value })}
+                    style={{ cursor: 'pointer', width: '100%' }}
+                  >
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast & Creative)</option>
+                    <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Smart & Logical)</option>
+                  </select>
+                </div>
               </div>
             </div>
 

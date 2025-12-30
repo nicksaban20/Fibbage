@@ -48,12 +48,17 @@ function decodeHTML(text: string): string {
 }
 
 // Fetch a single question - uses Claude first for variety, OpenTrivia DB as fallback
-export async function fetchSingleQuestion(apiKey?: string, previousQuestions: string[] = [], shouldVerify: boolean = false): Promise<Question> {
-  console.log('[Trivia] Fetching single question (Claude first for variety)...');
+export async function fetchSingleQuestion(
+  apiKey?: string,
+  previousQuestions: string[] = [],
+  shouldVerify: boolean = false,
+  model: string = 'claude-haiku-4-5-20251001'
+): Promise<Question> {
+  console.log(`[Trivia] Fetching single question (Model: ${model})...`);
 
   // Try Claude first (with random category and temperature for variety)
   try {
-    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify);
+    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify, model);
     if (question) {
       console.log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (category: ${question.category})`);
       return question;

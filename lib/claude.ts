@@ -140,7 +140,12 @@ Reply with just the fake answer, nothing else:`
 import { verifyFactWithSearch } from './verification';
 
 // Generate a Fibbage-style trivia question using Claude
-export async function generateTriviaQuestion(apiKey?: string, previousQuestions: string[] = [], shouldVerify: boolean = false): Promise<Question | null> {
+export async function generateTriviaQuestion(
+  apiKey?: string,
+  previousQuestions: string[] = [],
+  shouldVerify: boolean = false,
+  model: string = 'claude-haiku-4-5-20251001'
+): Promise<Question | null> {
   const MAX_GENERATION_ATTEMPTS = 3;
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
@@ -249,13 +254,11 @@ BANNED TOPICS (DO NOT GENERATE):
 - "Mona Lisa" / Da Vinci
 
 EXAMPLES OF PERFECT FIBBAGE QUESTIONS (Study the style):
-- "Measurements show that the Eifel Tower shrinks by about six inches during the _____." (Answer: Winter)
 - "In 1386, a pig in France was executed by public hanging for the murder of a _____." (Answer: Child)
 - "The tiny plastic bit at the end of a shoelace is called an _____." (Answer: Aglet)
 - "A group of pugs is surprisingly referred to as a _____." (Answer: Grumble)
 - "The Code of Hammurabi decreed that bartenders who watered down beer should be _____." (Answer: Executed)
 - "In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____." (Answer: Dead)
-- "The only letter that does not appear in any U.S. state name is _____." (Answer: Q)
 - "Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____." (Answer: Pooping)
 - "The inventor of the Pringles can is now buried in a _____." (Answer: Pringles Can)
 - "The total weight of all the ants on Earth is comparable to the total weight of all the _____." (Answer: Humans)
@@ -290,6 +293,17 @@ CATEGORY: ${randomCategory}`
       const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
       const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
       const categoryMatch = responseText.match(/CATEGORY:\s*([^\n]+)/i);
+
+      // Verification Step
+      if (shouldVerify) {
+        console.log(`[Claude] Verification enabled. Checking fact: "${questionMatch ? questionMatch[1].trim() : 'N/A'}" -> "${answerMatch ? answerMatch[1].trim() : 'N/A'}"`);
+        const verification = await verifyFactWithSearch(questionMatch ? questionMatch[1].trim() : '', answerMatch ? answerMatch[1].trim() : '', model);
+        if (!verification.verified) {
+          console.warn('[Claude] Fact verification failed. Retrying question generation.');
+          continue; // Skip this attempt and try again
+        }
+        console.log('[Claude] Fact verified successfully.');
+      }
 
       if (!questionMatch || !answerMatch) {
         console.error('[Claude] Failed to parse trivia question response');
