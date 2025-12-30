@@ -218,6 +218,11 @@ REQUIREMENTS:
   - GOOD: "The recording location was too close to a military _____." (Answer: Bakery) -> Unexpected!
   - The correct answer should feel "weird" or "funny" in context.
 
+- **AMBIGUITY REQUIREMENT:** Do NOT include descriptive words that give away the answer category.
+  - BAD: "Smugglers would hide contraband in hollowed-out loaves of _____." (Answer: Bread) -> "Loaves" reveals it's bread.
+  - GOOD: "Smugglers would hide contraband in hollowed-out _____." (Answer: Bread) -> Could be anything (Logs? Books? Shoes?).
+  - Keep the blank OPEN-ENDED. Eliminate "helper words" immediately before the blank.
+
 ANSWER QUALITY (CRITICAL):
 - **LENGTH PREFERENCE:**
   - 1 WORD: Highly Preferred (Aim for 70% of the time).
