@@ -38,6 +38,7 @@ export interface Question {
   correctAnswer: string;
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  source?: 'claude' | 'opentdb' | 'static';
 }
 
 // Game configuration (set by host)

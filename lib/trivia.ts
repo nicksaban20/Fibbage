@@ -225,77 +225,87 @@ function processOpenTDBResults(results: OpenTDBQuestion[], count: number): Quest
 }
 
 // Fallback questions in case API fails (Curated High-Difficulty / Fibbage Style)
-function getFallbackQuestions(): Question[] {
+export function getFallbackQuestions(): Question[] {
   return [
     {
       id: 'fallback-1',
       text: 'Measurements show that the Eifel Tower shrinks by about six inches during the _____.',
       correctAnswer: 'Winter',
       category: 'Science',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-2',
       text: 'In 1386, a pig in France was executed by public hanging for the murder of a _____.',
       correctAnswer: 'Child',
       category: 'History',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-3',
       text: 'The tiny plastic bit at the end of a shoelace is called an _____.',
       correctAnswer: 'Aglet',
       category: 'General Knowledge',
-      difficulty: 'medium'
+      difficulty: 'medium',
+      source: 'static'
     },
     {
       id: 'fallback-4',
       text: 'A group of pugs is surprisingly referred to as a _____.',
       correctAnswer: 'Grumble',
       category: 'Animals',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-5',
       text: 'The Code of Hammurabi decreed that bartenders who watered down beer should be _____.',
       correctAnswer: 'Executed',
       category: 'History',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-6',
       text: 'In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____.',
       correctAnswer: 'Dead',
       category: 'Sports',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-7',
       text: 'The only letter that does not appear in any U.S. state name is _____.',
       correctAnswer: 'Q',
       category: 'Geography',
-      difficulty: 'medium'
+      difficulty: 'medium',
+      source: 'static'
     },
     {
       id: 'fallback-8',
       text: 'Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____.',
       correctAnswer: 'Pooping',
       category: 'Culture',
-      difficulty: 'hard'
+      difficulty: 'hard',
+      source: 'static'
     },
     {
       id: 'fallback-9',
       text: 'The inventor of the Pringles can is now buried in a _____.',
       correctAnswer: 'Pringles Can',
       category: 'Weird Facts',
-      difficulty: 'medium'
+      difficulty: 'medium',
+      source: 'static'
     },
     {
       id: 'fallback-10',
       text: 'The total weight of all the ants on Earth is comparable to the total weight of all the _____.',
       correctAnswer: 'Humans',
       category: 'Nature',
-      difficulty: 'medium'
+      difficulty: 'medium',
+      source: 'static'
     }
   ];
 }

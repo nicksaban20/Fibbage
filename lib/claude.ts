@@ -287,7 +287,8 @@ CATEGORY: ${randomCategory}`
         text: formattedQuestion,
         correctAnswer: answer,
         category: category,
-        difficulty: 'medium' as const
+        difficulty: 'medium' as const,
+        source: 'claude' // Mark as AI-generated
       };
     } catch (error) {
       console.error('[Claude] Error generating trivia question after retries:', error);

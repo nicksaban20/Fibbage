@@ -11,7 +11,7 @@ import type {
   RoundResult,
 } from "../lib/game-types";
 import { DEFAULT_CONFIG, SCORING } from "../lib/game-types";
-import { fetchTriviaQuestions, fetchSingleQuestion } from "../lib/trivia";
+import { fetchTriviaQuestions, fetchSingleQuestion, getFallbackQuestions } from "../lib/trivia";
 import { generateFakeAnswer } from "../lib/claude";
 import {
   generateId,
@@ -303,12 +303,14 @@ export default class FibbageServer implements Party.Server {
       }
     }
 
-    if (!question) {
-      this.endGame();
-      return;
+    if (question) {
+      this.state.currentQuestion = question;
+      this.broadcastLog(`🎯 New Question (${question.source?.toUpperCase() || 'UNKNOWN'}): "${question.text.slice(0, 40)}..."`);
+    } else {
+      this.broadcastLog('⚠️ Failed to generate question, using emergency fallback');
+      this.state.currentQuestion = getFallbackQuestions()[0];
     }
 
-    this.state.currentQuestion = question;
     this.state.phase = "question";
     this.broadcastState();
 
