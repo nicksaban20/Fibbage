@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { usePartySocket } from '@/lib/usePartySocket';
 import type { GameConfig, Player, Answer } from '@/lib/game-types';
-import { DEFAULT_CONFIG } from '@/lib/game-types';
+import { DEFAULT_CONFIG, SCORING } from '@/lib/game-types';
 
 export default function HostPage() {
   const params = useParams();
@@ -495,7 +495,7 @@ export default function HostPage() {
                   <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>{answer.text}</div>
                   {answer.votes.length > 0 && !answer.isCorrect && !answer.isAI && (
                     <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.9rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                      +{answer.votes.length * 500} pts (Fooled {answer.votes.length})
+                      +{answer.votes.length * SCORING.FOOL_PLAYER} pts (Fooled {answer.votes.length})
                     </div>
                   )}
                 </div>

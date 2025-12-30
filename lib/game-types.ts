@@ -106,7 +106,7 @@ export const DEFAULT_CONFIG: GameConfig = {
 
 // Scoring constants
 export const SCORING = {
-  CORRECT_GUESS: 1000,
-  FOOL_PLAYER: 500,
+  CORRECT_GUESS: 500,
+  FOOL_PLAYER: 1000,
   AI_VOTE: 0 // No penalty for voting for AI
 };
