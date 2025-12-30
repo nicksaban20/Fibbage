@@ -35,20 +35,10 @@ function createInitialState(roomCode: string): GameState {
   };
 }
 
-// Normalize answer text to Title Case so all answers look uniform
+// Normalize answer text to UPPERCASE so all answers look uniform and hide typing differences
 function normalizeAnswerCase(text: string): string {
   if (!text || text.trim().length === 0) return text;
-
-  return text
-    .trim()
-    .split(' ')
-    .filter(word => word.length > 0)
-    .map(word => {
-      // Convert to lowercase then capitalize first letter
-      const lower = word.toLowerCase();
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join(' ');
+  return text.trim().toUpperCase();
 }
 
 export default class FibbageServer implements Party.Server {
