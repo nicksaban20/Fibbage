@@ -37,11 +37,17 @@ function createInitialState(roomCode: string): GameState {
 
 // Normalize answer text to Title Case so all answers look uniform
 function normalizeAnswerCase(text: string): string {
+  if (!text || text.trim().length === 0) return text;
+
   return text
     .trim()
-    .toLowerCase()
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .filter(word => word.length > 0)
+    .map(word => {
+      // Convert to lowercase then capitalize first letter
+      const lower = word.toLowerCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
     .join(' ');
 }
 
