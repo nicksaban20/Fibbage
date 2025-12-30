@@ -70,6 +70,12 @@ export async function fetchSingleQuestion(apiKey?: string, previousQuestions: st
   }
 
   // No cached questions - fetch from OpenTrivia DB
+  /* 
+   * DISABLED OPENTRIVIA DB FALLBACK 
+   * Reason: OpenTriviaDB questions are often too easy/generic (e.g., "Largest organ is skin").
+   * We want to strictly enforce "Obscure/Hard" difficulty, so if AI fails, we use our curated static list.
+   */
+  /*
   try {
     const questions = await fetchFromOpenTriviaDB(10);
     if (questions.length > 0) {
@@ -80,6 +86,7 @@ export async function fetchSingleQuestion(apiKey?: string, previousQuestions: st
   } catch (error) {
     console.error('[Trivia] OpenTrivia DB fetch failed:', error);
   }
+  */
 
   // Absolute last resort: static fallback
   console.log('[Trivia] Using static fallback question');
@@ -112,12 +119,17 @@ export async function fetchTriviaQuestions(count: number = 10, apiKey?: string):
 
   // Fallback: supplement with OpenTrivia DB
   const needed = count - claudeQuestions.length;
-  console.log(`[Trivia] Need ${needed} more, falling back to Open Trivia DB...`);
+  console.log(`[Trivia] Need ${needed} more, using static fallbacks instead of OpenTriviaDB...`);
 
+  /*
   const fallbackQuestions = await fetchFromOpenTriviaDB(needed + 3);
   console.log(`[Trivia] Got ${fallbackQuestions.length} fallback questions`);
-
   return [...claudeQuestions, ...fallbackQuestions].slice(0, count);
+  */
+
+  // Use static fallbacks randomized
+  const staticFallbacks = getFallbackQuestions().sort(() => 0.5 - Math.random()).slice(0, needed);
+  return [...claudeQuestions, ...staticFallbacks];
 }
 
 // Fetch questions from Open Trivia Database (fallback)
@@ -212,42 +224,77 @@ function processOpenTDBResults(results: OpenTDBQuestion[], count: number): Quest
   return questions;
 }
 
-// Fallback questions in case API fails
+// Fallback questions in case API fails (Curated High-Difficulty / Fibbage Style)
 function getFallbackQuestions(): Question[] {
   return [
     {
       id: 'fallback-1',
-      text: 'What was the original name for the butterfly?',
-      correctAnswer: 'Flutterby',
-      category: 'Nature',
-      difficulty: 'medium'
-    },
-    {
-      id: 'fallback-2',
-      text: 'What animal was incorrectly thought to spontaneously generate from mud?',
-      correctAnswer: 'Frogs',
-      category: 'Science',
-      difficulty: 'medium'
-    },
-    {
-      id: 'fallback-3',
-      text: 'What color were carrots before the 17th century?',
-      correctAnswer: 'Purple',
-      category: 'History',
-      difficulty: 'medium'
-    },
-    {
-      id: 'fallback-4',
-      text: 'What is the fear of peanut butter sticking to the roof of your mouth called?',
-      correctAnswer: 'Arachibutyrophobia',
+      text: 'Measurements show that the Eifel Tower shrinks by about six inches during the _____.',
+      correctAnswer: 'Winter',
       category: 'Science',
       difficulty: 'hard'
     },
     {
-      id: 'fallback-5',
-      text: 'In what country was the first-ever speeding ticket issued?',
-      correctAnswer: 'England',
+      id: 'fallback-2',
+      text: 'In 1386, a pig in France was executed by public hanging for the murder of a _____.',
+      correctAnswer: 'Child',
       category: 'History',
+      difficulty: 'hard'
+    },
+    {
+      id: 'fallback-3',
+      text: 'The tiny plastic bit at the end of a shoelace is called an _____.',
+      correctAnswer: 'Aglet',
+      category: 'General Knowledge',
+      difficulty: 'medium'
+    },
+    {
+      id: 'fallback-4',
+      text: 'A group of pugs is surprisingly referred to as a _____.',
+      correctAnswer: 'Grumble',
+      category: 'Animals',
+      difficulty: 'hard'
+    },
+    {
+      id: 'fallback-5',
+      text: 'The Code of Hammurabi decreed that bartenders who watered down beer should be _____.',
+      correctAnswer: 'Executed',
+      category: 'History',
+      difficulty: 'hard'
+    },
+    {
+      id: 'fallback-6',
+      text: 'In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____.',
+      correctAnswer: 'Dead',
+      category: 'Sports',
+      difficulty: 'hard'
+    },
+    {
+      id: 'fallback-7',
+      text: 'The only letter that does not appear in any U.S. state name is _____.',
+      correctAnswer: 'Q',
+      category: 'Geography',
+      difficulty: 'medium'
+    },
+    {
+      id: 'fallback-8',
+      text: 'Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____.',
+      correctAnswer: 'Pooping',
+      category: 'Culture',
+      difficulty: 'hard'
+    },
+    {
+      id: 'fallback-9',
+      text: 'The inventor of the Pringles can is now buried in a _____.',
+      correctAnswer: 'Pringles Can',
+      category: 'Weird Facts',
+      difficulty: 'medium'
+    },
+    {
+      id: 'fallback-10',
+      text: 'The total weight of all the ants on Earth is comparable to the total weight of all the _____.',
+      correctAnswer: 'Humans',
+      category: 'Nature',
       difficulty: 'medium'
     }
   ];
