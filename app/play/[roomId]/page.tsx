@@ -16,6 +16,7 @@ export default function PlayerPage() {
   const [answer, setAnswer] = useState('');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const { isConnected, gameState, join, submitAnswer, submitVote } = usePartySocket({
@@ -50,29 +51,35 @@ export default function PlayerPage() {
     if (gameState?.phase === 'voting') {
       setSelectedAnswer(null);
     }
+    setIsSubmitting(false);
   }, [gameState?.phase]);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playerName.trim()) {
-      setError('Please enter your name');
+    if (!playerName.trim() || isSubmitting) {
+      if (!playerName.trim()) setError('Please enter your name');
       return;
     }
+    setIsSubmitting(true);
     join(playerName.trim());
     setHasJoined(true);
+    // Keep submitting true to prevent double join attempts
   };
 
   const handleSubmitAnswer = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!answer.trim()) {
-      setError('Please enter an answer');
+    if (!answer.trim() || isSubmitting) {
+      if (!answer.trim()) setError('Please enter an answer');
       return;
     }
+    setIsSubmitting(true);
     submitAnswer(answer.trim());
     setError('');
   };
 
   const handleVote = (answerId: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setSelectedAnswer(answerId);
     submitVote(answerId);
   };
@@ -132,8 +139,8 @@ export default function PlayerPage() {
               <p style={{ color: 'var(--color-error)', fontSize: '0.875rem', textAlign: 'center' }}>{error}</p>
             )}
 
-            <button type="submit" className="btn btn-primary btn-large btn-full">
-              Join Game
+            <button type="submit" className="btn btn-primary btn-large btn-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Joining...' : 'Join Game'}
             </button>
           </form>
         </div>
@@ -262,8 +269,8 @@ export default function PlayerPage() {
                   {answer.length}/100
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary btn-large btn-full animate-glow" disabled={!answer.trim()} style={{ fontSize: '1.2rem', padding: '1.2rem' }}>
-                SUBMIT LIE
+              <button type="submit" className="btn btn-primary btn-large btn-full animate-glow" disabled={!answer.trim() || isSubmitting} style={{ fontSize: '1.2rem', padding: '1.2rem' }}>
+                {isSubmitting ? 'SUBMITTING...' : 'SUBMIT LIE'}
               </button>
             </form>
           )}
@@ -293,6 +300,7 @@ export default function PlayerPage() {
                   <button
                     key={answer.id}
                     onClick={() => handleVote(answer.id)}
+                    disabled={isSubmitting}
                     className={`answer-card ${selectedAnswer === answer.id ? 'selected' : ''}`}
                     style={{
                       textAlign: 'left',

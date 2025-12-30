@@ -209,6 +209,7 @@ REQUIREMENTS:
 EXAMPLES OF DIFFICULTY:
 BAD (Too Easy): "The _____ is known as the 'king of the jungle'." (Answer: Lion) -> REJECT THIS.
 BAD (Common Fact): "The Eiffel Tower is located in _____." (Answer: Paris) -> REJECT THIS.
+BAD (Basic Science): "The largest organ in the human body is the _____." (Answer: Skin) -> REJECT THIS.
 GOOD (Specific & Obscure): "The first item ever sold on eBay was a broken _____ pointer." (Answer: Laser)
 GOOD (Weird History): "During WWII, the US military tried to train _____ to guide missiles." (Answer: Pigeons)
 GOOD (Bizarre): "The only letter that doesn't appear in any US state name is _____." (Answer: Q)

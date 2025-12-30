@@ -13,7 +13,7 @@ export default function HostPage() {
   const [config, setConfig] = useState<GameConfig>({ ...DEFAULT_CONFIG });
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isStarting, setIsStarting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { isConnected, gameState, join, startGame, nextRound, playAgain } = usePartySocket({
     roomId,
@@ -36,17 +36,27 @@ export default function HostPage() {
   }, [gameState?.timeRemaining]);
 
   const handleStartGame = () => {
-    if (isStarting) return; // Prevent double-clicks
-    setIsStarting(true);
+    if (isProcessing) return; // Prevent double-clicks
+    setIsProcessing(true);
     setError('');
     startGame(config);
   };
 
-  // Reset isStarting when phase changes from lobby
+  const handleNextRound = () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    nextRound();
+  };
+
+  const handlePlayAgain = () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    playAgain();
+  };
+
+  // Reset processing state when phase changes
   useEffect(() => {
-    if (gameState?.phase !== 'lobby') {
-      setIsStarting(false);
-    }
+    setIsProcessing(false);
   }, [gameState?.phase]);
 
   const getTimerClass = () => {
@@ -211,10 +221,10 @@ export default function HostPage() {
             <button
               onClick={handleStartGame}
               className="btn btn-primary btn-large animate-glow"
-              disabled={gameState.players.filter(p => !p.isHost).length < 2 || isStarting}
+              disabled={gameState.players.filter(p => !p.isHost).length < 2 || isProcessing}
               style={{ padding: '1.2rem 3rem', fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
             >
-              {isStarting ? (
+              {isProcessing ? (
                 <>
                   <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '3px' }}></div>
                   STARTING...
@@ -422,8 +432,8 @@ export default function HostPage() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <button onClick={nextRound} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px' }}>
-              {gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →'}
+            <button onClick={handleNextRound} disabled={isProcessing} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px' }}>
+              {isProcessing ? 'LOADING...' : (gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →')}
             </button>
           </div>
         </div>
@@ -468,8 +478,8 @@ export default function HostPage() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <button onClick={playAgain} className="btn btn-secondary btn-large">
-              Play Again
+            <button onClick={handlePlayAgain} disabled={isProcessing} className="btn btn-secondary btn-large">
+              {isProcessing ? 'Resetting...' : 'Play Again'}
             </button>
           </div>
         </div>
