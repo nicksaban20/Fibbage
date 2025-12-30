@@ -189,7 +189,7 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
 
       const response = await withRetry(async () => {
         const message = await client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'claude-haiku-4-5-20251001', // Using requested 4.5 model
           max_tokens: 300,
           temperature: 0.95, // Even higher for maximum variety
           messages: [

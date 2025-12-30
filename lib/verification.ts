@@ -72,7 +72,7 @@ export async function verifyFactWithSearch(questionText: string, answerText: str
     const client = getClient();
     try {
         const message = await client.messages.create({
-            model: 'claude-3-5-haiku-20241022', // Use fast model for verification
+            model: 'claude-haiku-4-5-20251001', // Use requested 4.5 model
             max_tokens: 200,
             temperature: 0,
             messages: [
