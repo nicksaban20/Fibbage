@@ -262,10 +262,23 @@ CATEGORY: ${randomCategory}`
       // Validation
       if (answer.length < 1 || answer.length > 60) {
         console.error('[Claude] Answer length invalid:', answer.length);
-        return null;
+        continue;
       }
 
       if (questionText.length < 10) {
+        console.error('[Claude] Question too short:', questionText.length);
+        continue;
+      }
+
+      // Count words in answer to format blanks correctly
+      const wordCount = answer.split(/\s+/).filter(w => w.length > 0).length;
+      const blanks = Array(wordCount).fill('_____').join(' ');
+
+      // Replace any underscore pattern with the correct number of blanks
+      let formattedQuestion = questionText.replace(/_+(?:\s+_+)*/g, blanks);
+
+      // If no blanks found, append them
+      if (!formattedQuestion.includes('_____')) {
         formattedQuestion = formattedQuestion.replace(/\.\s*$/, '') + ' ' + blanks + '.';
       }
 
