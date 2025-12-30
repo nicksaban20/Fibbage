@@ -205,9 +205,11 @@ REQUIREMENTS:
 - **AMBIGUITY REQUIREMENT:** Do NOT include descriptive words that give away the answer category.
   - BAD: "Smugglers would hide contraband in hollowed-out loaves of _____." (Answer: Bread) -> "Loaves" reveals it's bread.
   - GOOD: "Smugglers would hide contraband in hollowed-out _____." (Answer: Bread) -> Could be anything (Logs? Books? Shoes?).
-  - BAD: "In 1814, a London brewery explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> "Brewery" implies Alcohol/Beer.
-  - GOOD: "In 1814, a London explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> Now it could be anything (Molasses? Sewage? Gin?).
+  - BAD: "The Louvre museum has a painting of a _____." (Answer: Smile) -> "Museum/Painting" implies Art.
+  - GOOD: "The Louvre contains 5000 instances of _____." (Answer: Smile) -> Could be anything.
   - Keep the blank OPEN-ENDED. Eliminate "Context Clues" (venue, container type) immediately before the blank.
+
+- **CRITICAL:** DO NOT USE ANY EXAMPLES FROM THIS PROMPT AS YOUR OUTPUT. YOU MUST GENERATE A NEW, UNIQUE QUESTION.
 
 - **AVOID PREDICTABLE CAUSE & EFFECT:** The answer must NOT be the purely logical conclusion of the sentence.
   - BAD: "Invented to monitor a coffee pot because people were tired of finding it _____." (Answer: Empty) -> Logic dictates "Empty".
