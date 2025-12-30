@@ -150,16 +150,30 @@ export default class FibbageServer implements Party.Server {
     if (existingPlayerByName) {
       if (!existingPlayerByName.isOnline) {
         // RECONNECT: Update ID to new connection and mark online
-        console.log(`[FibbageServer] Player "${name}" reconnecting (old id: ${existingPlayerByName.id} -> new: ${conn.id})`);
+        this.broadcastLog(`[FibbageServer] Player "${name}" reconnecting (old id: ${existingPlayerByName.id} -> new: ${conn.id})`);
         existingPlayerByName.id = conn.id;
         existingPlayerByName.isOnline = true;
 
-        // Send them specific welcome back?
         this.broadcastState();
         return;
       } else {
-        // Name taken and online
-        this.sendError(conn, "Name already taken");
+        // Name taken and "online" - Check if we should steal the session
+        // This handles race conditions where refresh happens fast (new join before old close)
+        // OR simply logging in from a new device/tab
+
+        this.broadcastLog(`[FibbageServer] Session steal for "${name}" (old: ${existingPlayerByName.id} -> new: ${conn.id})`);
+
+        // Close old connection if it exists
+        const oldConn = this.room.getConnection(existingPlayerByName.id);
+        if (oldConn) {
+          oldConn.close();
+        }
+
+        // Take over session
+        existingPlayerByName.id = conn.id;
+        existingPlayerByName.isOnline = true;
+
+        this.broadcastState();
         return;
       }
     }
