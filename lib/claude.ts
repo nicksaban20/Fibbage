@@ -214,8 +214,12 @@ REQUIREMENTS:
 - **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
 - AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
 
-- **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
-- AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
+ANSWER QUALITY (CRITICAL):
+- The answer MUST be a simple, common word or phrase (something a drunk person could guess).
+- AVOID "Jeopardy Answers" or complex legal/medical terms.
+- AVOID answers that are too specific to be guessed (e.g. "Palimony Suit" -> BAD, "Lawsuit" -> GOOD).
+- If the answer is a technical term, the question is BAD.
+- Good answers are often: common objects, animals, body parts, food, or simple actions.
 
 BANNED TOPICS (DO NOT GENERATE):
 - "Largest organ" / Skin
