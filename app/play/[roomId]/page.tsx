@@ -191,6 +191,17 @@ export default function PlayerPage() {
         </div>
       )}
 
+      {/* LOADING */}
+      {gameState?.phase === 'loading' && (
+        <div className="card-glass animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <div className="spinner" style={{ marginBottom: 'var(--spacing-lg)', width: '50px', height: '50px' }}></div>
+          <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.5rem' }}>LOADING...</h2>
+          <p style={{ color: 'var(--color-text-muted)' }}>
+            Generating your next question
+          </p>
+        </div>
+      )}
+
       {/* QUESTION DISPLAY */}
       {gameState?.phase === 'question' && gameState.currentQuestion && (
         <div className="card-glass animate-slide-up" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>

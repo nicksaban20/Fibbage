@@ -208,6 +208,21 @@ export default function HostPage() {
         </div>
       )}
 
+      {/* LOADING PHASE */}
+      {gameState.phase === 'loading' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div className="card-glass" style={{ maxWidth: '600px', width: '100%', textAlign: 'center', padding: 'var(--spacing-2xl)' }}>
+            <div className="spinner" style={{ width: '60px', height: '60px', margin: '0 auto var(--spacing-xl)', borderWidth: '4px' }}></div>
+            <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '2rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              PREPARING YOUR QUESTION
+            </h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem' }}>
+              Generating a challenging trivia question...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* QUESTION PHASE */}
       {gameState.phase === 'question' && gameState.currentQuestion && (
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>

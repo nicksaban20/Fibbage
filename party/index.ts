@@ -11,7 +11,7 @@ import type {
   RoundResult,
 } from "../lib/game-types";
 import { DEFAULT_CONFIG, SCORING } from "../lib/game-types";
-import { fetchTriviaQuestions } from "../lib/trivia";
+import { fetchTriviaQuestions, fetchSingleQuestion } from "../lib/trivia";
 import { generateFakeAnswer } from "../lib/claude";
 import {
   generateId,
@@ -39,6 +39,7 @@ export default class FibbageServer implements Party.Server {
   state: GameState;
   questions: Question[] = [];
   timer: ReturnType<typeof setInterval> | null = null;
+  nextQuestionPromise: Promise<Question> | null = null; // Background pre-fetch
 
   constructor(readonly room: Party.Room) {
     // Generate room code from room ID or create new one
@@ -191,11 +192,16 @@ export default class FibbageServer implements Party.Server {
       aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
     };
 
-    // Fetch questions (try Claude first, fall back to Open Trivia DB)
-    this.questions = await fetchTriviaQuestions(
-      this.state.config.totalRounds + 2,
-      this.room.env.ANTHROPIC_API_KEY as string
+    // Show loading phase while fetching first question
+    this.state.phase = "loading";
+    this.broadcastState();
+
+    // Fetch only the first question (on-demand)
+    const firstQuestion = await fetchSingleQuestion(
+      this.room.env.ANTHROPIC_API_KEY as string,
+      []
     );
+    this.questions = [firstQuestion];
 
     // Start first round
     await this.startRound();
@@ -214,8 +220,28 @@ export default class FibbageServer implements Party.Server {
       p.votedFor = undefined;
     });
 
-    // Get next question
-    const question = this.questions.shift();
+    // Get next question - check if we have one pre-fetched
+    let question = this.questions.shift();
+
+    // If no question in queue, wait for pre-fetched one or fetch new one
+    if (!question) {
+      if (this.nextQuestionPromise) {
+        // Show loading while waiting for pre-fetched question
+        this.state.phase = "loading";
+        this.broadcastState();
+        question = await this.nextQuestionPromise;
+        this.nextQuestionPromise = null;
+      } else {
+        // No pre-fetch, fetch one now with loading screen
+        this.state.phase = "loading";
+        this.broadcastState();
+        question = await fetchSingleQuestion(
+          this.room.env.ANTHROPIC_API_KEY as string,
+          this.state.currentQuestion ? [this.state.currentQuestion.text] : []
+        );
+      }
+    }
+
     if (!question) {
       this.endGame();
       return;
@@ -224,6 +250,14 @@ export default class FibbageServer implements Party.Server {
     this.state.currentQuestion = question;
     this.state.phase = "question";
     this.broadcastState();
+
+    // Pre-fetch next question in background if not last round
+    if (this.state.currentRound < this.state.config.totalRounds) {
+      this.nextQuestionPromise = fetchSingleQuestion(
+        this.room.env.ANTHROPIC_API_KEY as string,
+        [question.text]
+      );
+    }
 
     // Brief pause to show question, then move to answering
     setTimeout(() => {

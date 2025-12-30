@@ -1,6 +1,7 @@
 // Game phase states
 export type GamePhase =
   | 'lobby'
+  | 'loading'
   | 'question'
   | 'answering'
   | 'voting'

@@ -15,6 +15,9 @@ interface OpenTDBResponse {
   results: OpenTDBQuestion[];
 }
 
+// Cache for pre-fetched fallback questions
+let fallbackQuestionCache: Question[] = [];
+
 // Decode HTML entities
 function decodeHTML(text: string): string {
   const entities: Record<string, string> = {
@@ -41,6 +44,39 @@ function decodeHTML(text: string): string {
   decoded = decoded.replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 
   return decoded;
+}
+
+// Fetch a single question - tries Claude first, falls back to Open Trivia DB
+export async function fetchSingleQuestion(apiKey?: string, previousQuestions: string[] = []): Promise<Question> {
+  console.log('[Trivia] Fetching single question...');
+
+  // Try Claude first
+  try {
+    const question = await generateTriviaQuestion(apiKey, previousQuestions);
+    if (question) {
+      console.log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..."`);
+      return question;
+    }
+  } catch (error) {
+    console.error('[Trivia] Claude question generation failed:', error);
+  }
+
+  // Fall back to cached questions or fetch from Open Trivia DB
+  if (fallbackQuestionCache.length === 0) {
+    console.log('[Trivia] Refilling fallback cache from Open Trivia DB...');
+    fallbackQuestionCache = await fetchFromOpenTriviaDB(10);
+  }
+
+  // Use cached question
+  const question = fallbackQuestionCache.shift();
+  if (question) {
+    console.log(`[Trivia] Using cached fallback: "${question.text.slice(0, 50)}..."`);
+    return question;
+  }
+
+  // Last resort: static fallback
+  console.log('[Trivia] Using static fallback question');
+  return getFallbackQuestions()[0];
 }
 
 // Main function: Try Claude first, fall back to Open Trivia DB
