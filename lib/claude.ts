@@ -215,6 +215,11 @@ REQUIREMENTS:
 - AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
 
 ANSWER QUALITY (CRITICAL):
+- **LENGTH PREFERENCE:**
+  - 1 WORD: Highly Preferred (Aim for 70% of the time).
+  - 2 WORDS: Occasional (25% of the time).
+  - 3 WORDS: Rare (5% of the time).
+  - 4+ WORDS: NEVER.
 - The answer MUST be a simple, common word or phrase (something a drunk person could guess).
 - AVOID "Jeopardy Answers" or complex legal/medical terms.
 - AVOID answers that are too specific to be guessed (e.g. "Palimony Suit" -> BAD, "Lawsuit" -> GOOD).
