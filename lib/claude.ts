@@ -142,37 +142,48 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
   try {
     const client = getClient(apiKey);
 
+    // Random category for variety
+    const categories = [
+      'Science & Nature', 'History', 'Geography', 'Entertainment',
+      'Sports', 'Art & Literature', 'Music', 'Food & Drink',
+      'Animals', 'Technology', 'Pop Culture', 'Movies & TV',
+      'Mythology', 'Language & Words', 'Weird Facts'
+    ];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+
     const previousQuestionsContext = previousQuestions.length > 0
-      ? `\n\nAVOID THESE TOPICS (already used):\n${previousQuestions.slice(-10).join('\n')}`
+      ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
       : '';
 
     const response = await withRetry(async () => {
       const message = await client.messages.create({
         model: 'claude-3-haiku-20240307',
         max_tokens: 300,
+        temperature: 0.9, // Higher temperature for more variety
         messages: [
           {
             role: 'user',
-            content: `Generate ONE Fibbage trivia question.
+            content: `Generate ONE unique Fibbage trivia question about ${randomCategory.toUpperCase()}.
 
 FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
 
-GOOD QUESTION CRITERIA:
-- Surprising but true fact
-- Short answer (1-4 words)
-- Easy to invent fake answers
-- Fun topics: pop culture, history, science, weird facts
+REQUIREMENTS:
+- Must be about ${randomCategory}
+- Must be a SURPRISING but TRUE fact
+- Answer should be 1-4 words
+- Players should be able to invent believable fake answers
+- Be CREATIVE and UNIQUE - avoid common or overused trivia
+${previousQuestionsContext}
 
-EXAMPLES:
+EXAMPLES (for style reference only, don't copy these):
 Q: "The original name for a butterfly was _____." | A: "Flutterby"
 Q: "A group of flamingos is called a _____." | A: "Flamboyance"
 Q: "The dot over 'i' and 'j' is called a _____." | A: "Tittle"
-${previousQuestionsContext}
 
 FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
 QUESTION: [question with _____ for blank]
 ANSWER: [1-4 word answer]
-CATEGORY: [Science/History/Nature/Entertainment/General]`
+CATEGORY: ${randomCategory}`
           }
         ]
       });

@@ -46,49 +46,39 @@ function decodeHTML(text: string): string {
   return decoded;
 }
 
-// Fetch a single question - uses OpenTrivia DB first (verified facts), Claude as fallback
+// Fetch a single question - uses Claude first for variety, OpenTrivia DB as fallback
 export async function fetchSingleQuestion(apiKey?: string, previousQuestions: string[] = []): Promise<Question> {
-  console.log('[Trivia] Fetching single question (OpenTrivia DB first for verified facts)...');
+  console.log('[Trivia] Fetching single question (Claude first for variety)...');
 
-  // Try to use cached verified questions first (from OpenTrivia DB)
-  if (fallbackQuestionCache.length > 0) {
-    const question = fallbackQuestionCache.shift()!;
-    console.log(`[Trivia] Using verified question: "${question.text.slice(0, 50)}..."`);
-
-    // Refill cache in background if running low
-    if (fallbackQuestionCache.length < 3) {
-      fetchFromOpenTriviaDB(10).then(qs => {
-        fallbackQuestionCache.push(...qs);
-        console.log(`[Trivia] Refilled cache, now ${fallbackQuestionCache.length} questions`);
-      }).catch(e => console.warn('[Trivia] Background refill failed:', e));
-    }
-
-    return question;
-  }
-
-  // No cached questions - fetch from OpenTrivia DB
-  console.log('[Trivia] Cache empty, fetching from Open Trivia DB...');
-  try {
-    const questions = await fetchFromOpenTriviaDB(10);
-    if (questions.length > 0) {
-      fallbackQuestionCache.push(...questions.slice(1)); // Cache the rest
-      console.log(`[Trivia] Got ${questions.length} verified questions, cached ${fallbackQuestionCache.length}`);
-      return questions[0];
-    }
-  } catch (error) {
-    console.error('[Trivia] OpenTrivia DB fetch failed:', error);
-  }
-
-  // Last resort: try Claude (may have minor inaccuracies)
-  console.log('[Trivia] Falling back to Claude for question generation...');
+  // Try Claude first (with random category and temperature for variety)
   try {
     const question = await generateTriviaQuestion(apiKey, previousQuestions);
     if (question) {
-      console.log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (unverified)`);
+      console.log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (category: ${question.category})`);
       return question;
     }
   } catch (error) {
     console.error('[Trivia] Claude question generation failed:', error);
+  }
+
+  // Fallback to cached questions (from OpenTrivia DB)
+  console.log('[Trivia] Claude failed, trying OpenTrivia DB fallback...');
+  if (fallbackQuestionCache.length > 0) {
+    const question = fallbackQuestionCache.shift()!;
+    console.log(`[Trivia] Using cached fallback: "${question.text.slice(0, 50)}..."`);
+    return question;
+  }
+
+  // No cached questions - fetch from OpenTrivia DB
+  try {
+    const questions = await fetchFromOpenTriviaDB(10);
+    if (questions.length > 0) {
+      fallbackQuestionCache.push(...questions.slice(1)); // Cache the rest
+      console.log(`[Trivia] Got ${questions.length} fallback questions, cached ${fallbackQuestionCache.length}`);
+      return questions[0];
+    }
+  } catch (error) {
+    console.error('[Trivia] OpenTrivia DB fetch failed:', error);
   }
 
   // Absolute last resort: static fallback
@@ -96,24 +86,13 @@ export async function fetchSingleQuestion(apiKey?: string, previousQuestions: st
   return getFallbackQuestions()[Math.floor(Math.random() * getFallbackQuestions().length)];
 }
 
-// Fetch multiple questions - uses OpenTrivia DB first (verified), Claude to supplement if needed
+// Fetch multiple questions - uses Claude first (parallel), OpenTrivia DB as fallback
 export async function fetchTriviaQuestions(count: number = 10, apiKey?: string): Promise<Question[]> {
-  console.log(`[Trivia] Fetching ${count} verified questions from Open Trivia DB...`);
+  console.log(`[Trivia] Generating ${count} questions with Claude (parallel)...`);
 
-  // Primary source: OpenTrivia DB (verified facts)
-  const verifiedQuestions = await fetchFromOpenTriviaDB(count + 5); // Get extra in case some are filtered
-
-  if (verifiedQuestions.length >= count) {
-    console.log(`[Trivia] Got ${verifiedQuestions.length} verified questions`);
-    return verifiedQuestions.slice(0, count);
-  }
-
-  // Need more - try Claude as supplement (may have minor inaccuracies)
-  const needed = count - verifiedQuestions.length;
-  console.log(`[Trivia] Need ${needed} more questions, supplementing with Claude...`);
-
-  const claudePromises = Array.from({ length: needed }, (_, i) =>
-    generateTriviaQuestion(apiKey, verifiedQuestions.map(q => q.text)).catch(error => {
+  // Primary source: Claude (parallel for speed, with variety from temperature/categories)
+  const claudePromises = Array.from({ length: count }, (_, i) =>
+    generateTriviaQuestion(apiKey, []).catch(error => {
       console.error(`[Trivia] Claude question ${i + 1} failed:`, error);
       return null;
     })
@@ -124,9 +103,21 @@ export async function fetchTriviaQuestions(count: number = 10, apiKey?: string):
     .filter((r): r is PromiseFulfilledResult<Question | null> => r.status === 'fulfilled' && r.value !== null)
     .map(r => r.value as Question);
 
-  console.log(`[Trivia] Claude supplemented with ${claudeQuestions.length} additional questions`);
+  console.log(`[Trivia] Claude generated ${claudeQuestions.length}/${count} questions`);
 
-  return [...verifiedQuestions, ...claudeQuestions].slice(0, count);
+  // If we got enough from Claude, use them
+  if (claudeQuestions.length >= count) {
+    return claudeQuestions.slice(0, count);
+  }
+
+  // Fallback: supplement with OpenTrivia DB
+  const needed = count - claudeQuestions.length;
+  console.log(`[Trivia] Need ${needed} more, falling back to Open Trivia DB...`);
+
+  const fallbackQuestions = await fetchFromOpenTriviaDB(needed + 3);
+  console.log(`[Trivia] Got ${fallbackQuestions.length} fallback questions`);
+
+  return [...claudeQuestions, ...fallbackQuestions].slice(0, count);
 }
 
 // Fetch questions from Open Trivia Database (fallback)
