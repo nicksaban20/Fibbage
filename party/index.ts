@@ -489,17 +489,9 @@ export default class FibbageServer implements Party.Server {
     }
 
     this.state.phase = "results";
-    this.state.timeRemaining = 10; // 10 second results timer
+    this.state.timeRemaining = 0; // No auto-advance - host clicks "Next Round" to continue
     this.broadcastState();
-
-    // Auto-advance to next round after 10 seconds
-    this.startTimer(() => {
-      if (this.state.currentRound >= this.state.config.totalRounds) {
-        this.endGame();
-      } else {
-        this.startRound();
-      }
-    }, 10);
+    // Removed auto-timer to prevent race conditions with manual "Next Round" clicks
   }
 
   // Handle next round request
@@ -509,6 +501,9 @@ export default class FibbageServer implements Party.Server {
       this.sendError(conn, "Only the host can advance rounds");
       return;
     }
+
+    // Stop any running timers to prevent race conditions
+    this.stopTimer();
 
     if (this.state.currentRound >= this.state.config.totalRounds) {
       this.endGame();
