@@ -352,45 +352,55 @@ export default class FibbageServer implements Party.Server {
       }
     });
 
-    // Generate AI fake answers based on config
+    // Generate AI fake answers in PARALLEL (much faster than sequential)
     const aiAnswerCount = this.state.config.aiAnswerCount ?? 1;
-    console.log(`[FibbageServer] Generating ${aiAnswerCount} AI answers...`);
-    console.log(`[FibbageServer] Current config:`, JSON.stringify(this.state.config));
+    console.log(`[FibbageServer] Generating ${aiAnswerCount} AI answers in parallel...`);
 
-    for (let i = 0; i < aiAnswerCount; i++) {
-      try {
-        console.log(`[FibbageServer] Generating AI answer ${i + 1}/${aiAnswerCount}...`);
-        const aiAnswer = await generateFakeAnswer(this.state.currentQuestion, this.room.env.ANTHROPIC_API_KEY as string);
-        console.log(`[FibbageServer] Generated AI answer ${i + 1}: "${aiAnswer}"`);
+    if (aiAnswerCount > 0) {
+      const aiPromises = Array.from({ length: aiAnswerCount }, (_, i) =>
+        generateFakeAnswer(this.state.currentQuestion!, this.room.env.ANTHROPIC_API_KEY as string)
+          .then(aiAnswer => {
+            console.log(`[FibbageServer] Generated AI answer ${i + 1}: "${aiAnswer}"`);
+            return aiAnswer;
+          })
+          .catch(error => {
+            console.error(`[FibbageServer] Failed to generate AI answer ${i + 1}:`, error);
+            return null;
+          })
+      );
 
-        // Check for duplicates
-        const isDuplicate = answers.some(a => a.text.toLowerCase() === aiAnswer.toLowerCase());
-        if (!isDuplicate) {
-          answers.push({
-            id: generateId(),
-            text: aiAnswer,
-            playerId: null,
-            isCorrect: false,
-            isAI: true,
-            votes: [],
-          });
-          console.log(`[FibbageServer] Added AI answer ${i + 1} to pool`);
-        } else {
-          console.log(`[FibbageServer] AI answer ${i + 1} was duplicate, skipping`);
+      const aiResults = await Promise.allSettled(aiPromises);
+
+      aiResults.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value) {
+          const aiAnswer = result.value;
+          // Check for duplicates
+          const isDuplicate = answers.some(a => a.text.toLowerCase() === aiAnswer.toLowerCase());
+          if (!isDuplicate) {
+            answers.push({
+              id: generateId(),
+              text: aiAnswer,
+              playerId: null,
+              isCorrect: false,
+              isAI: true,
+              votes: [],
+            });
+          } else {
+            console.log(`[FibbageServer] AI answer ${i + 1} was duplicate, skipping`);
+          }
         }
-      } catch (error) {
-        console.error(`[FibbageServer] Failed to generate AI answer ${i + 1}:`, error);
-        // Only add fallback if this is the first AI answer and we have none
-        if (i === 0 && !answers.some(a => a.isAI)) {
-          answers.push({
-            id: generateId(),
-            text: "Unknown",
-            playerId: null,
-            isCorrect: false,
-            isAI: true,
-            votes: [],
-          });
-        }
+      });
+
+      // Add fallback if no AI answers were generated
+      if (!answers.some(a => a.isAI)) {
+        answers.push({
+          id: generateId(),
+          text: "Unknown",
+          playerId: null,
+          isCorrect: false,
+          isAI: true,
+          votes: [],
+        });
       }
     }
 
@@ -474,8 +484,8 @@ export default class FibbageServer implements Party.Server {
 
     const roundScores: { playerId: string; pointsEarned: number; reason: string }[] = [];
 
-    // Calculate scores
-    this.state.players.forEach((player) => {
+    // Calculate scores (only for non-host players)
+    this.state.players.filter(p => !p.isHost).forEach((player) => {
       let points = 0;
       let reasons: string[] = [];
 
@@ -538,6 +548,12 @@ export default class FibbageServer implements Party.Server {
 
     // Stop any running timers to prevent race conditions
     this.stopTimer();
+
+    // Only allow advancing from results phase
+    if (this.state.phase !== "results") {
+      this.sendError(conn, "Cannot advance - not in results phase");
+      return;
+    }
 
     if (this.state.currentRound >= this.state.config.totalRounds) {
       this.endGame();

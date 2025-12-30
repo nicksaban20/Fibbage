@@ -1,12 +1,9 @@
 /**
- * Enhanced answer validation with RAG support
- * Combines fuzzy matching, semantic similarity, and Wikipedia fact-checking
+ * Answer validation using fast fuzzy matching
  */
 
 import type { Question } from './game-types';
 import { isTooSimilarToCorrect } from './fuzzy-match';
-import { isSemanticallySimilar } from './embeddings';
-import { getValidationContext } from './wikipedia';
 
 export interface ValidationResult {
     isValid: boolean;
