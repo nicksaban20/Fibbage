@@ -151,6 +151,32 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
     ];
     const randomCategory = categories[Math.floor(Math.random() * categories.length)];
 
+    // Random style modifiers for variety between games
+    const styles = [
+      'obscure and little-known',
+      'surprising and counterintuitive',
+      'funny or amusing',
+      'mind-blowing',
+      'historical',
+      'scientific',
+      'cultural',
+      'bizarre but true'
+    ];
+    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+
+    // Temporal seed to vary questions by time (changes every hour)
+    const now = new Date();
+    const timeSeed = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
+
+    // Random sub-topic for even more variety
+    const subTopics = [
+      'from the 1800s', 'from ancient times', 'about famous people',
+      'about inventions', 'about world records', 'about origins of things',
+      'about unusual laws', 'about body parts', 'about countries',
+      'about space', 'about the ocean', 'about plants'
+    ];
+    const randomSubTopic = subTopics[Math.floor(Math.random() * subTopics.length)];
+
     const previousQuestionsContext = previousQuestions.length > 0
       ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
       : '';
@@ -159,28 +185,26 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
       const message = await client.messages.create({
         model: 'claude-3-haiku-20240307',
         max_tokens: 300,
-        temperature: 0.9, // Higher temperature for more variety
+        temperature: 0.95, // Even higher for maximum variety
         messages: [
           {
             role: 'user',
-            content: `Generate ONE unique Fibbage trivia question about ${randomCategory.toUpperCase()}.
+            content: `Generate ONE unique Fibbage trivia question.
+
+TOPIC: ${randomCategory} - specifically something ${randomStyle} ${randomSubTopic}
+SESSION: ${timeSeed}-${Math.random().toString(36).slice(2, 6)}
 
 FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
 
 REQUIREMENTS:
-- Must be about ${randomCategory}
-- Must be a SURPRISING but TRUE fact
+- Must be ${randomStyle} fact about ${randomCategory}
+- Must be TRUE and verifiable
 - Answer should be 1-4 words
-- Players should be able to invent believable fake answers
-- Be CREATIVE and UNIQUE - avoid common or overused trivia
+- Avoid overused trivia (butterflies, flamingos, etc.)
+- Be CREATIVE - surprise the players!
 ${previousQuestionsContext}
 
-EXAMPLES (for style reference only, don't copy these):
-Q: "The original name for a butterfly was _____." | A: "Flutterby"
-Q: "A group of flamingos is called a _____." | A: "Flamboyance"
-Q: "The dot over 'i' and 'j' is called a _____." | A: "Tittle"
-
-FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+FORMAT:
 QUESTION: [question with _____ for blank]
 ANSWER: [1-4 word answer]
 CATEGORY: ${randomCategory}`
