@@ -199,10 +199,10 @@ export default function HostPage() {
             <button
               onClick={handleStartGame}
               className="btn btn-primary btn-large animate-glow"
-              disabled={gameState.players.length < 2}
+              disabled={gameState.players.filter(p => !p.isHost).length < 2}
               style={{ padding: '1.2rem 3rem', fontSize: '1.25rem' }}
             >
-              {gameState.players.length < 2 ? 'WAITING FOR 2+ PLAYERS' : 'START THE GAME'}
+              {gameState.players.filter(p => !p.isHost).length < 2 ? 'WAITING FOR 2+ PLAYERS' : 'START THE GAME'}
             </button>
           </div>
         </div>
