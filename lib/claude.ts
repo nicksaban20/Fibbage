@@ -1,10 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Question } from './game-types';
 import { buildQuestionContext } from './trivia';
-import { getWikipediaContext, buildRAGPromptContext, type WikiFact } from './wikipedia';
 import { validateAIAnswer } from './validation';
 
-// Initialize Anthropic client
+// Initialize Anthropic client with validation
 function getClient(apiKey?: string): Anthropic {
   const finalApiKey = apiKey || process.env.ANTHROPIC_API_KEY;
   if (!finalApiKey) {
@@ -13,65 +12,65 @@ function getClient(apiKey?: string): Anthropic {
   return new Anthropic({ apiKey: finalApiKey });
 }
 
-// Extract search terms from question for Wikipedia lookup
-function extractSearchQuery(question: Question): string {
-  // Remove question words and get key terms
-  const stopWords = ['what', 'which', 'who', 'where', 'when', 'why', 'how', 'is', 'are', 'was', 'were', 'the', 'a', 'an'];
-  const words = question.text.toLowerCase()
-    .replace(/[?.,!'"]/g, '')
-    .split(/\s+/)
-    .filter(w => w.length > 2 && !stopWords.includes(w));
+// Retry wrapper with exponential backoff
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelayMs: number = 500
+): Promise<T> {
+  let lastError: Error | null = null;
 
-  return words.slice(0, 4).join(' ');
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`[Claude] Attempt ${attempt}/${maxRetries} failed:`, error);
+
+      if (attempt < maxRetries) {
+        const delay = baseDelayMs * Math.pow(2, attempt - 1);
+        console.log(`[Claude] Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('All retries failed');
 }
 
-// Generate a convincing fake answer using Claude with RAG context
+// Generate a convincing fake answer using Claude (simplified, no Wikipedia for speed)
 export async function generateFakeAnswer(question: Question, apiKey?: string): Promise<string> {
   try {
     const client = getClient(apiKey);
 
-    // Fetch Wikipedia context for grounding
-    let wikiFact: WikiFact | null = null;
-    try {
-      const searchQuery = extractSearchQuery(question);
-      wikiFact = await getWikipediaContext(searchQuery);
-    } catch (error) {
-      console.warn('Wikipedia fetch failed, continuing without RAG context:', error);
-    }
-
-    // Build context with RAG information
-    const baseContext = buildQuestionContext(question);
-    const ragContext = buildRAGPromptContext(wikiFact, question.correctAnswer);
-
-    const message = await client.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 100,
-      messages: [
-        {
-          role: 'user',
-          content: `You are an expert at Fibbage, a trivia game where you create convincing fake answers to fool other players.
+    const response = await withRetry(async () => {
+      const message = await client.messages.create({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 100,
+        messages: [
+          {
+            role: 'user',
+            content: `You are playing Fibbage. Generate ONE believable fake answer.
 
 QUESTION: "${question.text}"
 CATEGORY: ${question.category}
-THE REAL ANSWER IS: "${question.correctAnswer}"
+REAL ANSWER (do NOT use this): "${question.correctAnswer}"
 
-${ragContext}
+Rules:
+- Same format/length as real answer
+- Sounds plausible but is WRONG
+- NO quotes, NO explanation, just the fake answer
 
-YOUR TASK: Generate ONE fake answer that:
-1. Is the SAME TYPE as the real answer (if real answer is a person's name, your fake should be a person's name; if it's a place, yours should be a place; if it's a number, yours should be a number, etc.)
-2. Sounds PLAUSIBLE for this specific question - it should be something players might actually believe
-3. Is CLEARLY WRONG - not the real answer or a correct alternative
-4. Has SIMILAR LENGTH and FORMAT to the real answer "${question.correctAnswer}"
+Fake answer:`
+          }
+        ]
+      });
 
-RESPOND WITH ONLY THE FAKE ANSWER - no quotes, no explanation, no punctuation unless the answer requires it.
-
-Your fake answer:`
-        }
-      ]
+      return message;
     });
 
     // Extract text from response
-    const textBlock = message.content.find(block => block.type === 'text');
+    const textBlock = response.content.find(block => block.type === 'text');
     if (!textBlock || textBlock.type !== 'text') {
       throw new Error('No text in response');
     }
@@ -79,25 +78,63 @@ Your fake answer:`
     // Clean up the response
     let fakeAnswer = textBlock.text.trim();
     // Remove quotes if present
-    fakeAnswer = fakeAnswer.replace(/^["']|["']$/g, '');
+    fakeAnswer = fakeAnswer.replace(/^[\"']|[\"']$/g, '');
     // Remove any leading phrases
-    fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps)[:\s]*/i, '');
+    fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps|Fake answer:?)[:\s]*/i, '');
+    // Limit length
+    fakeAnswer = fakeAnswer.substring(0, 100);
 
     console.log(`[Claude] Generated fake answer: "${fakeAnswer}" for question: "${question.text.slice(0, 50)}..."`);
 
     // Validate the AI answer to ensure it's not too similar to correct answer
     const validation = validateAIAnswer(fakeAnswer, question);
     if (!validation.isValid) {
-      console.warn(`[Claude] AI answer failed validation: ${validation.reason}, using fallback`);
-      return generateFallbackFakeAnswer(question);
+      console.warn(`[Claude] AI answer failed validation: ${validation.reason}, regenerating...`);
+      // Try once more with explicit instruction to be different
+      return await generateDifferentFakeAnswer(question, apiKey, question.correctAnswer);
     }
 
     return fakeAnswer;
   } catch (error) {
-    console.error('[Claude] Error generating fake answer:', error);
+    console.error('[Claude] Error generating fake answer after retries:', error);
     // Return a generic fallback
     return generateFallbackFakeAnswer(question);
   }
+}
+
+// Second attempt with more explicit instructions
+async function generateDifferentFakeAnswer(question: Question, apiKey: string | undefined, avoidAnswer: string): Promise<string> {
+  try {
+    const client = getClient(apiKey);
+
+    const message = await client.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 100,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate a fake answer for this trivia question. Must be COMPLETELY DIFFERENT from "${avoidAnswer}".
+
+Question: "${question.text}"
+Category: ${question.category}
+
+Reply with just the fake answer, nothing else:`
+        }
+      ]
+    });
+
+    const textBlock = message.content.find(block => block.type === 'text');
+    if (textBlock && textBlock.type === 'text') {
+      let answer = textBlock.text.trim().replace(/^[\"']|[\"']$/g, '');
+      if (answer.length > 0 && answer.length <= 100) {
+        return answer;
+      }
+    }
+  } catch (error) {
+    console.error('[Claude] Second attempt also failed:', error);
+  }
+
+  return generateFallbackFakeAnswer(question);
 }
 
 // Generate a Fibbage-style trivia question using Claude
@@ -109,58 +146,52 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
       ? `\n\nAVOID THESE TOPICS (already used):\n${previousQuestions.slice(-10).join('\n')}`
       : '';
 
-    const message = await client.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 300,
-      messages: [
-        {
-          role: 'user',
-          content: `You are generating trivia questions for FIBBAGE, a party game where:
-1. Players see a trivia question with a blank (answer hidden)
-2. They make up fake answers to fool other players
-3. They try to find the real answer among the fakes
+    const response = await withRetry(async () => {
+      const message = await client.messages.create({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 300,
+        messages: [
+          {
+            role: 'user',
+            content: `Generate ONE Fibbage trivia question.
 
-WHAT MAKES A GREAT FIBBAGE QUESTION:
-- The answer is a SURPRISING but REAL fact that can be verified
-- Average people can UNDERSTAND the question (not too obscure)
-- The answer is SHORT (1-4 words)
-- Players can easily INVENT believable fake answers
-- The topic is INTERESTING (pop culture, history, science, weird facts)
+FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
 
-EXAMPLE QUESTIONS:
-1. Q: "The original name for a butterfly was _____." | A: "Flutterby"
-2. Q: "Before 1687, clocks only had _____ hand(s)." | A: "One"
-3. Q: "The fear of long words is ironically called _____." | A: "Hippopotomonstrosesquippedaliophobia"
-4. Q: "In Switzerland, it's illegal to own just one _____." | A: "Guinea pig"
-5. Q: "The dot over the letters 'i' and 'j' is called a _____." | A: "Tittle"
-6. Q: "Honey never _____." | A: "Expires"
-7. Q: "The inventor of the Pringles can is buried in a _____." | A: "Pringles can"
-8. Q: "A group of flamingos is called a _____." | A: "Flamboyance"
+GOOD QUESTION CRITERIA:
+- Surprising but true fact
+- Short answer (1-4 words)
+- Easy to invent fake answers
+- Fun topics: pop culture, history, science, weird facts
+
+EXAMPLES:
+Q: "The original name for a butterfly was _____." | A: "Flutterby"
+Q: "A group of flamingos is called a _____." | A: "Flamboyance"
+Q: "The dot over 'i' and 'j' is called a _____." | A: "Tittle"
 ${previousQuestionsContext}
 
-Generate ONE new Fibbage question. Format your response EXACTLY like this:
-QUESTION: [your question with blank shown as _____]
-ANSWER: [the real answer, 1-4 words]
-CATEGORY: [Science/History/Nature/Entertainment/Sports/Geography/General]
-
-Generate a unique, fun question now:`
-        }
-      ]
+FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+QUESTION: [question with _____ for blank]
+ANSWER: [1-4 word answer]
+CATEGORY: [Science/History/Nature/Entertainment/General]`
+          }
+        ]
+      });
+      return message;
     });
 
-    const textBlock = message.content.find(block => block.type === 'text');
+    const textBlock = response.content.find(block => block.type === 'text');
     if (!textBlock || textBlock.type !== 'text') {
       console.error('[Claude] No text in trivia question response');
       return null;
     }
 
-    const response = textBlock.text.trim();
-    console.log('[Claude] Generated trivia question response:', response);
+    const responseText = textBlock.text.trim();
+    console.log('[Claude] Generated trivia question response:', responseText);
 
-    // Parse the response
-    const questionMatch = response.match(/QUESTION:\s*(.+)/i);
-    const answerMatch = response.match(/ANSWER:\s*(.+)/i);
-    const categoryMatch = response.match(/CATEGORY:\s*(.+)/i);
+    // More robust parsing - handle multiline and variations
+    const questionMatch = responseText.match(/QUESTION:\s*(.+?)(?=\n|ANSWER:|$)/is);
+    const answerMatch = responseText.match(/ANSWER:\s*(.+?)(?=\n|CATEGORY:|$)/is);
+    const categoryMatch = responseText.match(/CATEGORY:\s*(.+?)(?=\n|$)/is);
 
     if (!questionMatch || !answerMatch) {
       console.error('[Claude] Failed to parse trivia question response');
@@ -168,24 +199,31 @@ Generate a unique, fun question now:`
     }
 
     const questionText = questionMatch[1].trim();
-    const answer = answerMatch[1].trim().replace(/^["']|["']$/g, '');
-    const category = categoryMatch ? categoryMatch[1].trim() : 'General';
+    let answer = answerMatch[1].trim();
+    // Clean up answer - remove quotes, extra whitespace
+    answer = answer.replace(/^[\"'\s]+|[\"'\s]+$/g, '');
+    const category = categoryMatch ? categoryMatch[1].trim().replace(/^[\"'\s]+|[\"'\s]+$/g, '') : 'General';
 
-    // Basic validation
-    if (answer.length < 1 || answer.length > 50) {
+    // Validation
+    if (answer.length < 1 || answer.length > 60) {
       console.error('[Claude] Answer length invalid:', answer.length);
       return null;
     }
 
+    if (questionText.length < 10) {
+      console.error('[Claude] Question too short:', questionText.length);
+      return null;
+    }
+
     return {
-      id: `claude-${Date.now()}`,
+      id: `claude-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       text: questionText.replace(/_+/g, '_____'),
       correctAnswer: answer,
       category: category,
       difficulty: 'medium' as const
     };
   } catch (error) {
-    console.error('[Claude] Error generating trivia question:', error);
+    console.error('[Claude] Error generating trivia question after retries:', error);
     return null;
   }
 }
