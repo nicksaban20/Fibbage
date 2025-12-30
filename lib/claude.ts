@@ -200,12 +200,13 @@ REQUIREMENTS:
 - Must be ${randomStyle} fact about ${randomCategory}
 - Must be TRUE and verifiable
 - Answer should be 1-4 words
+- Use _____ for each word in the answer (e.g., "_____ _____" for a 2-word answer)
 - Avoid overused trivia (butterflies, flamingos, etc.)
 - Be CREATIVE - surprise the players!
 ${previousQuestionsContext}
 
 FORMAT:
-QUESTION: [question with _____ for blank]
+QUESTION: [question with _____ for EACH word in the answer]
 ANSWER: [1-4 word answer]
 CATEGORY: ${randomCategory}`
           }
@@ -250,9 +251,21 @@ CATEGORY: ${randomCategory}`
       return null;
     }
 
+    // Count words in answer to format blanks correctly
+    const wordCount = answer.split(/\s+/).filter(w => w.length > 0).length;
+    const blanks = Array(wordCount).fill('_____').join(' ');
+
+    // Replace any underscore pattern with the correct number of blanks
+    let formattedQuestion = questionText.replace(/_+(?:\s+_+)*/g, blanks);
+
+    // If no blanks found, append them
+    if (!formattedQuestion.includes('_____')) {
+      formattedQuestion = formattedQuestion.replace(/\.\s*$/, '') + ' ' + blanks + '.';
+    }
+
     return {
       id: `claude-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      text: questionText.replace(/_+/g, '_____'),
+      text: formattedQuestion,
       correctAnswer: answer,
       category: category,
       difficulty: 'medium' as const
