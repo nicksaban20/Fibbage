@@ -16,7 +16,7 @@ export interface ValidationResult {
 
 /**
  * Validate a player's submitted answer
- * Checks multiple layers to prevent submitting the correct answer
+ * Uses fast fuzzy matching only - async API calls were causing 5+ second delays
  */
 export async function validatePlayerAnswer(
     submittedAnswer: string,
@@ -25,7 +25,7 @@ export async function validatePlayerAnswer(
     const answer = submittedAnswer.trim();
     const correctAnswer = question.correctAnswer;
 
-    // Layer 1: Fuzzy string matching (fast, catches typos/variations)
+    // Fast fuzzy string matching (catches typos/variations)
     if (isTooSimilarToCorrect(answer, correctAnswer, 0.2)) {
         return {
             isValid: false,
@@ -34,47 +34,13 @@ export async function validatePlayerAnswer(
         };
     }
 
-    // Layer 2: Semantic similarity (catches synonyms/paraphrases)
-    try {
-        const isSemanticallyClose = await isSemanticallySimilar(
-            answer,
-            correctAnswer,
-            0.85 // High threshold to avoid false positives
-        );
-
-        if (isSemanticallyClose) {
-            return {
-                isValid: false,
-                reason: 'Your answer means the same thing as the real answer!',
-                confidence: 'high'
-            };
-        }
-    } catch (error) {
-        // Embedding check failed, continue with other validations
-        console.warn('Semantic similarity check failed:', error);
-    }
-
-    // Layer 3: Wikipedia fact check (catches factually correct alternatives)
-    try {
-        const context = await getValidationContext(
-            question.text,
-            question.category,
-            correctAnswer
-        );
-
-        // Check if the answer matches any known related facts
-        for (const relatedAnswer of context.relatedAnswers) {
-            if (isTooSimilarToCorrect(answer, relatedAnswer, 0.3)) {
-                return {
-                    isValid: false,
-                    reason: 'Your answer is too close to a known fact about this topic!',
-                    confidence: 'medium'
-                };
-            }
-        }
-    } catch (error) {
-        // Wikipedia check failed, not critical
-        console.warn('Wikipedia validation failed:', error);
+    // Also check case-insensitive exact match
+    if (answer.toLowerCase() === correctAnswer.toLowerCase()) {
+        return {
+            isValid: false,
+            reason: 'That\'s the correct answer! Try to make up a fake one.',
+            confidence: 'high'
+        };
     }
 
     // All checks passed

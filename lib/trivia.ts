@@ -47,33 +47,30 @@ function decodeHTML(text: string): string {
 export async function fetchTriviaQuestions(count: number = 10, apiKey?: string): Promise<Question[]> {
   console.log(`[Trivia] Fetching ${count} Fibbage-style questions...`);
 
-  // Try to generate questions with Claude
-  const questions: Question[] = [];
-  const previousQuestionTexts: string[] = [];
+  // Try to generate questions with Claude IN PARALLEL (much faster than sequential)
+  console.log('[Trivia] Attempting parallel Claude question generation...');
 
-  console.log('[Trivia] Attempting Claude question generation...');
-
-  for (let i = 0; i < count; i++) {
-    try {
-      const question = await generateTriviaQuestion(apiKey, previousQuestionTexts);
-      if (question) {
-        questions.push(question);
-        previousQuestionTexts.push(question.text);
-        console.log(`[Trivia] Claude generated question ${i + 1}: "${question.text.slice(0, 50)}..."`);
-      }
-    } catch (error) {
+  const questionPromises = Array.from({ length: count }, (_, i) =>
+    generateTriviaQuestion(apiKey, []).catch(error => {
       console.error(`[Trivia] Claude question ${i + 1} failed:`, error);
-    }
-  }
+      return null;
+    })
+  );
+
+  const results = await Promise.allSettled(questionPromises);
+  const questions: Question[] = results
+    .filter((r): r is PromiseFulfilledResult<Question | null> => r.status === 'fulfilled' && r.value !== null)
+    .map(r => r.value as Question);
+
+  console.log(`[Trivia] Claude generated ${questions.length}/${count} questions in parallel`);
 
   // If we got enough questions from Claude, use them
   if (questions.length >= count) {
-    console.log(`[Trivia] Got ${questions.length} questions from Claude`);
-    return questions;
+    return questions.slice(0, count);
   }
 
   // Fall back to Open Trivia DB for remaining questions
-  console.log(`[Trivia] Claude generated ${questions.length}/${count}, falling back to Open Trivia DB...`);
+  console.log(`[Trivia] Need ${count - questions.length} more, falling back to Open Trivia DB...`);
 
   const needed = count - questions.length;
   const fallbackQuestions = await fetchFromOpenTriviaDB(needed);
