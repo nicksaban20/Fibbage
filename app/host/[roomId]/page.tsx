@@ -14,6 +14,7 @@ export default function HostPage() {
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
   const { isConnected, gameState, join, startGame, nextRound, playAgain } = usePartySocket({
     roomId,
@@ -123,10 +124,75 @@ export default function HostPage() {
               <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-sm)', fontSize: '1.1rem' }}>
                 Join at <strong style={{ color: 'white' }}>fibbage-green.vercel.app</strong> with code:
               </p>
-              <div className="room-code animate-glow" style={{ fontSize: '4rem', padding: 'var(--spacing-md) var(--spacing-2xl)' }}>
-                {gameState.roomCode}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <div className="room-code animate-glow" style={{ fontSize: '4rem', padding: 'var(--spacing-md) var(--spacing-2xl)' }}>
+                  {gameState.roomCode}
+                </div>
+                <button
+                  onClick={() => setShowQr(true)}
+                  className="btn btn-secondary"
+                  style={{ borderRadius: '50%', width: '50px', height: '50px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title="Show QR Code"
+                >
+                  <span style={{ fontSize: '1.5rem' }}>📱</span>
+                </button>
               </div>
             </div>
+
+            {/* QR Code Overlay */}
+            {showQr && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  background: 'rgba(0,0,0,0.9)',
+                  zIndex: 1000,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <div style={{ position: 'relative', width: '90vh', height: '90vh' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/adobe-express-qr-code.png"
+                    alt="Scan to Join"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                  <button
+                    onClick={() => setShowQr(false)}
+                    style={{
+                      position: 'absolute',
+                      top: '-20px',
+                      right: '-20px',
+                      background: 'white',
+                      color: 'black',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p style={{ marginTop: 'var(--spacing-md)', fontSize: '1.5rem', fontWeight: 600, color: 'white' }}>
+                  Scan to Join
+                </p>
+              </div>
+            )}
 
             {/* Player list */}
             <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
