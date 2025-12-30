@@ -45,7 +45,7 @@ export async function generateFakeAnswer(question: Question, apiKey?: string): P
 
     const response = await withRetry(async () => {
       const message = await client.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 100,
         messages: [
           {
@@ -108,7 +108,7 @@ async function generateDifferentFakeAnswer(question: Question, apiKey: string | 
     const client = getClient(apiKey);
 
     const message = await client.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-3-5-sonnet-20240620',
       max_tokens: 100,
       messages: [
         {
@@ -183,7 +183,7 @@ export async function generateTriviaQuestion(apiKey?: string, previousQuestions:
 
     const response = await withRetry(async () => {
       const message = await client.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 300,
         temperature: 0.95, // Even higher for maximum variety
         messages: [
@@ -199,10 +199,12 @@ FIBBAGE: A party game where players see a fill-in-the-blank question and try to 
 REQUIREMENTS:
 - Must be ${randomStyle} fact about ${randomCategory}
 - Must be TRUE and verifiable
+- Must be UNBELIEVABLY OBSCURE (Graduate/Archive level difficulty)
+- Facts should sound fake but be 100% true (The Fibbage Effect)
 - Answer should be 1-4 words
 - Use _____ for each word in the answer (e.g., "_____ _____" for a 2-word answer)
-- Avoid overused trivia (butterflies, flamingos, etc.)
-- Be CREATIVE - surprise the players!
+- Avoid common trivia like the plague (no flamingos, no butterflies, no octopuses)
+- Be CREATIVE - surprise the players with how wild the fact is!
 ${previousQuestionsContext}
 
 FORMAT:
