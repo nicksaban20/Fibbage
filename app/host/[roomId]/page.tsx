@@ -13,6 +13,7 @@ export default function HostPage() {
   const [config, setConfig] = useState<GameConfig>({ ...DEFAULT_CONFIG });
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
 
   const { isConnected, gameState, join, startGame, nextRound, playAgain } = usePartySocket({
     roomId,
@@ -35,8 +36,18 @@ export default function HostPage() {
   }, [gameState?.timeRemaining]);
 
   const handleStartGame = () => {
+    if (isStarting) return; // Prevent double-clicks
+    setIsStarting(true);
+    setError('');
     startGame(config);
   };
+
+  // Reset isStarting when phase changes from lobby
+  useEffect(() => {
+    if (gameState?.phase !== 'lobby') {
+      setIsStarting(false);
+    }
+  }, [gameState?.phase]);
 
   const getTimerClass = () => {
     if (timeRemaining <= 5) return 'timer danger';
@@ -199,10 +210,19 @@ export default function HostPage() {
             <button
               onClick={handleStartGame}
               className="btn btn-primary btn-large animate-glow"
-              disabled={gameState.players.filter(p => !p.isHost).length < 2}
-              style={{ padding: '1.2rem 3rem', fontSize: '1.25rem' }}
+              disabled={gameState.players.filter(p => !p.isHost).length < 2 || isStarting}
+              style={{ padding: '1.2rem 3rem', fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
             >
-              {gameState.players.filter(p => !p.isHost).length < 2 ? 'WAITING FOR 2+ PLAYERS' : 'START THE GAME'}
+              {isStarting ? (
+                <>
+                  <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '3px' }}></div>
+                  STARTING...
+                </>
+              ) : gameState.players.filter(p => !p.isHost).length < 2 ? (
+                'WAITING FOR 2+ PLAYERS'
+              ) : (
+                'START THE GAME'
+              )}
             </button>
           </div>
         </div>
