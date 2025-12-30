@@ -81,6 +81,9 @@ export default class FibbageServer implements Party.Server {
 
   // Handle new connections
   onConnect(conn: Party.Connection) {
+    console.log(`[FibbageServer] New connection from ${conn.id} (v2025-12-30-DEBUG)`);
+    this.broadcastLog(`[System] Connected to Server v2025-12-30-DEBUG`);
+
     // Send current state to newly connected client
     const message: ServerMessage = { type: "state-update", state: this.state };
     conn.send(JSON.stringify(message));
