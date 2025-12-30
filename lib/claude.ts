@@ -213,6 +213,10 @@ REQUIREMENTS:
 - Be CREATIVE - surprise the players with how wild the fact is!
 - **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
 - AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
+- **SURPRISE FACTOR:** The answer should NOT be the most logical completion of the sentence.
+  - BAD: "The recording location was too close to a military _____." (Answer: Base/Submarine) -> Too easy to guess context.
+  - GOOD: "The recording location was too close to a military _____." (Answer: Bakery) -> Unexpected!
+  - The correct answer should feel "weird" or "funny" in context.
 
 ANSWER QUALITY (CRITICAL):
 - **LENGTH PREFERENCE:**
