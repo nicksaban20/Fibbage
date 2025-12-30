@@ -54,6 +54,13 @@ export default function PlayerPage() {
     setIsSubmitting(false);
   }, [gameState?.phase]);
 
+  // Reset submitting state on error (e.g. answer too similar)
+  useEffect(() => {
+    if (error) {
+      setIsSubmitting(false);
+    }
+  }, [error]);
+
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim() || isSubmitting) {
