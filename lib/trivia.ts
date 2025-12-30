@@ -225,58 +225,179 @@ function processOpenTDBResults(results: OpenTDBQuestion[], count: number): Quest
 }
 
 // Fallback questions in case API fails (Curated High-Difficulty / Fibbage Style)
+// Fallback questions in case API fails (Curated High-Difficulty / Fibbage Style)
 export function getFallbackQuestions(): Question[] {
   return [
     {
       id: 'fallback-1',
-      text: 'Measurements show that the Eifel Tower shrinks by about six inches during the _____.',
-      correctAnswer: 'Winter',
-      category: 'Science',
+      text: 'In 2002, Bruce Willis sent 12,000 boxes of _____ to U.S. soldiers in Afghanistan.',
+      correctAnswer: 'Girl Scout Cookies',
+      category: 'Celebrity',
       difficulty: 'hard',
       source: 'static'
     },
     {
       id: 'fallback-2',
-      text: 'In 1386, a pig in France was executed by public hanging for the murder of a _____.',
-      correctAnswer: 'Child',
+      text: 'The electric chair was invented by a professional _____ named Alfred Southwick.',
+      correctAnswer: 'Dentist',
       category: 'History',
-      difficulty: 'hard',
-      source: 'static'
-    },
-    {
-      id: 'fallback-3',
-      text: 'The tiny plastic bit at the end of a shoelace is called an _____.',
-      correctAnswer: 'Aglet',
-      category: 'General Knowledge',
       difficulty: 'medium',
       source: 'static'
     },
     {
+      id: 'fallback-3',
+      text: 'A study published in the journal Anthrozoo reported that cows produce 5% more milk when they are given _____.',
+      correctAnswer: 'Names',
+      category: 'Science',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
       id: 'fallback-4',
-      text: 'A group of pugs is surprisingly referred to as a _____.',
-      correctAnswer: 'Grumble',
-      category: 'Animals',
+      text: 'Only about 14 games were ever made for the Gizmondo game system including the game "_____ Balls."',
+      correctAnswer: 'Sticky',
+      category: 'Gaming',
       difficulty: 'hard',
       source: 'static'
     },
     {
       id: 'fallback-5',
-      text: 'The Code of Hammurabi decreed that bartenders who watered down beer should be _____.',
-      correctAnswer: 'Executed',
-      category: 'History',
+      text: 'People in Damariscotta, Maine hold an annual race where they use _____ as boats.',
+      correctAnswer: 'Pumpkins',
+      category: 'Culture',
       difficulty: 'hard',
       source: 'static'
     },
     {
       id: 'fallback-6',
-      text: 'In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____.',
-      correctAnswer: 'Dead',
+      text: 'Leo Granit Kraft is a world champion in an unusual sport that combines boxing and _____.',
+      correctAnswer: 'Chess',
       category: 'Sports',
       difficulty: 'hard',
       source: 'static'
     },
     {
       id: 'fallback-7',
+      text: 'A woman in Muncie, Indiana was hospitalized after trying to remove a callus on her foot with a _____.',
+      correctAnswer: 'Shotgun',
+      category: 'Weird News',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-8',
+      text: 'Cheap Chic Weddings is an annual contest in which participants make wedding dresses out of _____.',
+      correctAnswer: 'Toilet Paper',
+      category: 'Culture',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-9',
+      text: 'Marcella Hazan is the culinary guru who pioneered the unusual technique of cooking duck with a _____.',
+      correctAnswer: 'Hair Dryer',
+      category: 'Food',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-10',
+      text: 'The sound of E.T. walking was made by someone squishing _____.',
+      correctAnswer: 'Jell-O',
+      category: 'Movies',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-11',
+      text: 'Oddly enough, Albert Einstein\'s eyeballs can be found in a _____ in New York City.',
+      correctAnswer: 'Safe Deposit Box',
+      category: 'History',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-12',
+      text: 'In 2013, a wealthy Michagan man bought the house next to his ex-wife and erected a giant bronze statue of a _____.',
+      correctAnswer: 'Middle Finger',
+      category: 'Weird News',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-13',
+      text: 'The shape of wombat poop is a _____.',
+      correctAnswer: 'Cube',
+      category: 'Animals',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-14',
+      text: 'What the British call the dance that Americans call the "Hokey Pokey" is the "Hokey _____."',
+      correctAnswer: 'Cokey',
+      category: 'Language',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-15',
+      text: 'The name for a group of porcupines is a _____.',
+      correctAnswer: 'Prickle',
+      category: 'Animals',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-16',
+      text: 'The original name for the search engine that became Google was _____.',
+      correctAnswer: 'Backrub',
+      category: 'Tech',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-17',
+      text: 'The name of the man on the Quaker Oats label is _____.',
+      correctAnswer: 'Larry',
+      category: 'General Knowledge',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-18',
+      text: 'During a famous fire in 1567, a Norwegian man named Hans Steininger died after tripping over a _____.',
+      correctAnswer: 'Beard',
+      category: 'History',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-19',
+      text: 'The fishing company E21 makes a very peculiar fishing rod that is composed of 70% _____.',
+      correctAnswer: 'Carrots',
+      category: 'Sports',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-20',
+      text: 'Ben and Jerry only started making ice cream because it was too expensive to make _____.',
+      correctAnswer: 'Bagels',
+      category: 'Food',
+      difficulty: 'medium',
+      source: 'static'
+    },
+    {
+      id: 'fallback-21',
+      text: 'For his voiceover work in Texas Chainsaw Massacre, John Larroqueet was paid not with money, but with _____.',
+      correctAnswer: 'Marijuana',
+      category: 'Movies',
+      difficulty: 'hard',
+      source: 'static'
+    },
+    {
+      id: 'fallback-22',
       text: 'The only letter that does not appear in any U.S. state name is _____.',
       correctAnswer: 'Q',
       category: 'Geography',
@@ -284,27 +405,27 @@ export function getFallbackQuestions(): Question[] {
       source: 'static'
     },
     {
-      id: 'fallback-8',
-      text: 'Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____.',
-      correctAnswer: 'Pooping',
-      category: 'Culture',
+      id: 'fallback-23',
+      text: 'In 1386, a pig in France was executed by public hanging for the murder of a _____.',
+      correctAnswer: 'Child',
+      category: 'History',
       difficulty: 'hard',
       source: 'static'
     },
     {
-      id: 'fallback-9',
-      text: 'The inventor of the Pringles can is now buried in a _____.',
-      correctAnswer: 'Pringles Can',
-      category: 'Weird Facts',
-      difficulty: 'medium',
+      id: 'fallback-24',
+      text: 'Measurements show that the Eifel Tower shrinks by about six inches during the _____.',
+      correctAnswer: 'Winter',
+      category: 'Science',
+      difficulty: 'hard',
       source: 'static'
     },
     {
-      id: 'fallback-10',
-      text: 'The total weight of all the ants on Earth is comparable to the total weight of all the _____.',
-      correctAnswer: 'Humans',
-      category: 'Nature',
-      difficulty: 'medium',
+      id: 'fallback-25',
+      text: 'Mike Tyson once tweeted "I\'m a bad _____."',
+      correctAnswer: 'Bowler',
+      category: 'Celebrity',
+      difficulty: 'hard',
       source: 'static'
     }
   ];
