@@ -133,9 +133,10 @@ export default function HostPage() {
                   <li style={{ color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>Waiting for brave souls...</li>
                 ) : (
                   gameState.players.filter(p => !p.isHost).map((player) => (
-                    <li key={player.id} className="player-chip animate-slide-up">
-                      <span className="player-avatar">{player.name.charAt(0).toUpperCase()}</span>
+                    <li key={player.id} className="player-chip animate-slide-up" style={{ opacity: player.isOnline ? 1 : 0.5, border: player.isOnline ? undefined : '1px dashed rgba(255,255,255,0.3)' }}>
+                      <span className="player-avatar" style={{ background: player.isOnline ? undefined : 'gray' }}>{player.name.charAt(0).toUpperCase()}</span>
                       {player.name}
+                      {!player.isOnline && <span style={{ fontSize: '0.7em', marginLeft: '0.5em', fontStyle: 'italic' }}>(Offline)</span>}
                     </li>
                   ))
                 )}

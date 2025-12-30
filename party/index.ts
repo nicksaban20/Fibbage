@@ -72,13 +72,12 @@ export default class FibbageServer implements Party.Server {
     conn.send(JSON.stringify(message));
   }
 
-  // Handle disconnections
+  // Handle disconnections - SOFT DISCONNECT
   onClose(conn: Party.Connection) {
     const player = this.state.players.find((p) => p.id === conn.id);
     if (player) {
-      this.state.players = this.state.players.filter((p) => p.id !== conn.id);
-      const leftMessage: ServerMessage = { type: "player-left", playerId: conn.id };
-      this.room.broadcast(JSON.stringify(leftMessage));
+      player.isOnline = false;
+      // We don't remove the player, just mark offline so they can reconnect
       this.broadcastState();
     }
   }
@@ -119,15 +118,36 @@ export default class FibbageServer implements Party.Server {
 
   // Handle player joining
   handleJoin(conn: Party.Connection, name: string, isHost?: boolean) {
-    // Check if player already exists
-    const existingPlayer = this.state.players.find((p) => p.id === conn.id);
-    if (existingPlayer) {
-      // Update name if changed, but allow re-join
-      existingPlayer.name = name.trim().substring(0, 20);
-      existingPlayer.isHost = isHost || existingPlayer.isHost;
-
+    // Check if player already exists by ID (re-connection from same socket?)
+    const existingPlayerById = this.state.players.find((p) => p.id === conn.id);
+    if (existingPlayerById) {
+      existingPlayerById.name = name.trim().substring(0, 20);
+      existingPlayerById.isHost = isHost || existingPlayerById.isHost;
+      existingPlayerById.isOnline = true;
       this.broadcastState();
       return;
+    }
+
+    // Check for existing player by NAME (Recovery/Reconnection)
+    const existingPlayerByName = this.state.players.find(
+      (p) => p.name.toLowerCase() === name.trim().toLowerCase()
+    );
+
+    if (existingPlayerByName) {
+      if (!existingPlayerByName.isOnline) {
+        // RECONNECT: Update ID to new connection and mark online
+        console.log(`[FibbageServer] Player "${name}" reconnecting (old id: ${existingPlayerByName.id} -> new: ${conn.id})`);
+        existingPlayerByName.id = conn.id;
+        existingPlayerByName.isOnline = true;
+
+        // Send them specific welcome back?
+        this.broadcastState();
+        return;
+      } else {
+        // Name taken and online
+        this.sendError(conn, "Name already taken");
+        return;
+      }
     }
 
     // Check if game is in progress
@@ -153,10 +173,9 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
-    // Check for duplicate names
+    // Check for duplicate names (already handled above, but double check)
     if (this.state.players.find((p) => p.name.toLowerCase() === name.toLowerCase())) {
       this.sendError(conn, "Name already taken");
-      // Don't close connection here, let them try another name
       return;
     }
 
@@ -167,6 +186,7 @@ export default class FibbageServer implements Party.Server {
       isHost: isHost || this.state.players.length === 0,
       hasSubmittedAnswer: false,
       hasVoted: false,
+      isOnline: true,
     };
 
     this.state.players.push(player);
@@ -327,9 +347,9 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all players (except host) have submitted
-    const playersToSubmit = this.state.players.filter(p => !p.isHost);
-    if (playersToSubmit.length > 0 && playersToSubmit.every((p) => p.hasSubmittedAnswer)) {
+    // Check if all ONLINE players (except host) have submitted
+    const onlinePlayers = this.state.players.filter(p => !p.isHost && p.isOnline);
+    if (onlinePlayers.length > 0 && onlinePlayers.every((p) => p.hasSubmittedAnswer)) {
       this.stopTimer();
       this.endAnsweringPhase();
     }
@@ -477,9 +497,9 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all players (except host) have voted
-    const playersToVote = this.state.players.filter(p => !p.isHost);
-    if (playersToVote.length > 0 && playersToVote.every((p) => p.hasVoted)) {
+    // Check if all ONLINE players (except host) have voted
+    const onlinePlayers = this.state.players.filter(p => !p.isHost && p.isOnline);
+    if (onlinePlayers.length > 0 && onlinePlayers.every((p) => p.hasVoted)) {
       this.stopTimer();
       this.endVotingPhase();
     }
@@ -601,7 +621,7 @@ export default class FibbageServer implements Party.Server {
     this.broadcastState();
   }
 
-  // Handle player leaving
+  // Handle player leaving (Explicit LEAVE button) - HARD DISCONNECT
   handleLeave(conn: Party.Connection) {
     this.state.players = this.state.players.filter((p) => p.id !== conn.id);
 

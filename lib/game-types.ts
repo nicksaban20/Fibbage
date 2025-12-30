@@ -18,6 +18,7 @@ export interface Player {
   hasVoted: boolean;
   currentAnswer?: string;
   votedFor?: string;
+  isOnline: boolean;
 }
 
 // Answer with metadata
