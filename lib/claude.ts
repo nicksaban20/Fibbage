@@ -214,10 +214,17 @@ REQUIREMENTS:
 - **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
 - AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
 
-EXAMPLES OF DIFFICULTY & OPENNESS:
-BAD (Too Easy): "The _____ is known as the 'king of the jungle'." (Answer: Lion) -> REJECT.
-BAD (Common Fact): "The Eiffel Tower is located in _____." (Answer: Paris) -> REJECT.
-BAD (Too Narrow): "The capital of France is _____." (Answer: Paris) -> REJECT (Only one plausible guess).
+- **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
+- AVOID questions where the answer is obviously a country, a year, or a color unless it's impossible to guess.
+
+BANNED TOPICS (DO NOT GENERATE):
+- "Largest organ" / Skin
+- "King of the jungle" / Lion
+- "Capital of" / City names
+- "Eiffel Tower" / Paris
+- "Mona Lisa" / Da Vinci
+
+EXAMPLES OF GOOD QUESTIONS (Open-Ended & Obscure):
 GOOD (Specific & Obscure): "The first item ever sold on eBay was a broken _____ pointer." (Answer: Laser) -> GOOD (Could be: Laser, Stick, Mouse, Clock, Toy, etc.)
 GOOD (Weird History): "During WWII, the US military tried to train _____ to guide missiles." (Answer: Pigeons) -> GOOD (Could be: Dogs, Cats, Bats, Rats, etc.)
 GOOD (Open Context): "In 1850, the city of Paris passed a law forbidding women from _____." (Answer: Wearing Pants) -> GOOD (Could be: Smoking, Walking, Singing, etc.)
