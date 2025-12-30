@@ -35,16 +35,7 @@ function createInitialState(roomCode: string): GameState {
   };
 }
 
-// Normalize answer text to UPPERCASE so all answers look uniform and hide typing differences
-function normalizeAnswerCase(text: string): string {
-  if (!text || text.trim().length === 0) {
-    console.log('[FibbageServer] normalizeAnswerCase: Empty input');
-    return text;
-  }
-  const normalized = text.trim().toUpperCase();
-  console.log(`[FibbageServer] normalizeAnswerCase: "${text}" -> "${normalized}"`);
-  return normalized;
-}
+
 
 export default class FibbageServer implements Party.Server {
   state: GameState;
@@ -58,9 +49,27 @@ export default class FibbageServer implements Party.Server {
     this.state = createInitialState(roomCode);
   }
 
+  // Normalize answer text to UPPERCASE so all answers look uniform and hide typing differences
+  private normalizeAnswerCase(text: string): string {
+    if (!text || text.trim().length === 0) {
+      // this.broadcastLog('[FibbageServer] normalizeAnswerCase: Empty input');
+      return text;
+    }
+    const normalized = text.trim().toUpperCase();
+    this.broadcastLog(`[FibbageServer] normalizeAnswerCase: "${text}" -> "${normalized}"`);
+    return normalized;
+  }
+
   // Broadcast state to all connected clients
   broadcastState() {
     const message: ServerMessage = { type: "state-update", state: this.state };
+    this.room.broadcast(JSON.stringify(message));
+  }
+
+  // Helper to send logs to client console for debugging
+  broadcastLog(text: string, data?: any) {
+    console.log(text, data || '');
+    const message: ServerMessage = { type: "debug-log", message: text, data };
     this.room.broadcast(JSON.stringify(message));
   }
 
@@ -374,7 +383,7 @@ export default class FibbageServer implements Party.Server {
       if (p.currentAnswer) {
         answers.push({
           id: generateId(),
-          text: normalizeAnswerCase(p.currentAnswer),
+          text: this.normalizeAnswerCase(p.currentAnswer),
           playerId: p.id,
           isCorrect: false,
           isAI: false,
@@ -406,7 +415,7 @@ export default class FibbageServer implements Party.Server {
         if (result.status === 'fulfilled' && result.value) {
           const aiAnswer = result.value;
           // Check for duplicates (compare normalized versions)
-          const normalizedAI = normalizeAnswerCase(aiAnswer);
+          const normalizedAI = this.normalizeAnswerCase(aiAnswer);
           const isDuplicate = answers.some(a => a.text.toLowerCase() === normalizedAI.toLowerCase());
           if (!isDuplicate) {
             answers.push({
@@ -424,10 +433,11 @@ export default class FibbageServer implements Party.Server {
       });
 
       // Add fallback if no AI answers were generated
+      // Add fallback if no AI answers were generated
       if (!answers.some(a => a.isAI)) {
         answers.push({
           id: generateId(),
-          text: normalizeAnswerCase("Unknown"),
+          text: this.normalizeAnswerCase("Unknown"),
           playerId: null,
           isCorrect: false,
           isAI: true,
@@ -441,7 +451,7 @@ export default class FibbageServer implements Party.Server {
     // Add correct answer (normalized)
     answers.push({
       id: generateId(),
-      text: normalizeAnswerCase(this.state.currentQuestion.correctAnswer),
+      text: this.normalizeAnswerCase(this.state.currentQuestion.correctAnswer),
       playerId: null,
       isCorrect: true,
       isAI: false,
@@ -456,7 +466,7 @@ export default class FibbageServer implements Party.Server {
     this.state.timeRemaining = this.state.config.votingTimeSeconds;
 
     // Log ALL answers to verify normalization
-    console.log('[FibbageServer] Starting voting with answers:', JSON.stringify(this.state.answers.map(a => ({ text: a.text, isAI: a.isAI })), null, 2));
+    this.broadcastLog('[FibbageServer] Starting voting with answers:', JSON.stringify(this.state.answers.map(a => ({ text: a.text, isAI: a.isAI })), null, 2));
 
     this.broadcastState();
 

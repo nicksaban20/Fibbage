@@ -93,6 +93,9 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
           case 'phase-change':
             log('📍 Phase change message:', message.phase);
             break;
+          case 'debug-log':
+            log(`🔧 Server Log: ${message.message}`, message.data);
+            break;
         }
       } catch (error) {
         console.error('[Fibbage] Failed to parse message:', error);
