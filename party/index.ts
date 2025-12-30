@@ -109,7 +109,7 @@ export default class FibbageServer implements Party.Server {
           await this.handleStartGame(sender, data.config);
           break;
         case "submit-answer":
-          this.handleSubmitAnswer(sender, data.answer.toUpperCase());
+          this.handleSubmitAnswer(sender, data.answer);
           break;
         case "submit-vote":
           this.handleSubmitVote(sender, data.answerId);
