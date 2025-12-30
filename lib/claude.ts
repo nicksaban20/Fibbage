@@ -223,6 +223,12 @@ REQUIREMENTS:
   - GOOD: "Smugglers would hide contraband in hollowed-out _____." (Answer: Bread) -> Could be anything (Logs? Books? Shoes?).
   - Keep the blank OPEN-ENDED. Eliminate "helper words" immediately before the blank.
 
+- **AVOID PREDICTABLE CAUSE & EFFECT:** The answer must NOT be the purely logical conclusion of the sentence.
+  - BAD: "Invented to monitor a coffee pot because people were tired of finding it _____." (Answer: Empty) -> Logic dictates "Empty".
+  - GOOD: "The first webcam was invented to monitor a _____." (Answer: Coffee Pot) -> A bit more open, though still tech history.
+  - BETTER: "The first webcam was used to monitor a coffee pot, specifically checking for _____." (Answer: Mold/Poison/Aliens) -> (If true).
+  - Rule: If the sentence setup makes the answer obvious to a sensible person, IT IS A BAD QUESTION.
+
 ANSWER QUALITY (CRITICAL):
 - **LENGTH PREFERENCE:**
   - 1 WORD: Highly Preferred (Aim for 70% of the time).
