@@ -294,69 +294,71 @@ CATEGORY: ${randomCategory}`
       return null;
     }
   }
+  return null;
+}
 
-  // Fallback fake answer generator
-  function generateFallbackFakeAnswer(question: Question): string {
-    const fallbacks: Record<string, string[]> = {
-      'Science': ['Quantum fluctuation', 'Molecular resonance', 'Thermal dynamics', 'Photosynthetic reaction'],
-      'History': ['King George III', 'The Romans', 'Ancient Egypt', 'The Ming Dynasty'],
-      'Geography': ['The Amazon', 'Mount Kilimanjaro', 'The Sahara', 'Greenland'],
-      'Entertainment': ['Steven Spielberg', 'The Beatles', 'Hollywood Studios', 'MGM Studios'],
-      'Sports': ['The Olympics', 'World Cup 1966', 'Jesse Owens', 'Babe Ruth'],
-      'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
-      'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
-    };
+// Fallback fake answer generator
+function generateFallbackFakeAnswer(question: Question): string {
+  const fallbacks: Record<string, string[]> = {
+    'Science': ['Quantum fluctuation', 'Molecular resonance', 'Thermal dynamics', 'Photosynthetic reaction'],
+    'History': ['King George III', 'The Romans', 'Ancient Egypt', 'The Ming Dynasty'],
+    'Geography': ['The Amazon', 'Mount Kilimanjaro', 'The Sahara', 'Greenland'],
+    'Entertainment': ['Steven Spielberg', 'The Beatles', 'Hollywood Studios', 'MGM Studios'],
+    'Sports': ['The Olympics', 'World Cup 1966', 'Jesse Owens', 'Babe Ruth'],
+    'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
+    'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
+  };
 
-    const category = Object.keys(fallbacks).find(cat =>
-      question.category.toLowerCase().includes(cat.toLowerCase())
-    ) || 'default';
+  const category = Object.keys(fallbacks).find(cat =>
+    question.category.toLowerCase().includes(cat.toLowerCase())
+  ) || 'default';
 
-    const options = fallbacks[category];
-    return options[Math.floor(Math.random() * options.length)];
+  const options = fallbacks[category];
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+// Validate that an answer is not too similar to the correct answer
+export function isValidFakeAnswer(fakeAnswer: string, correctAnswer: string): boolean {
+  const fake = fakeAnswer.toLowerCase().trim();
+  const correct = correctAnswer.toLowerCase().trim();
+
+  // Check if they're too similar
+  if (fake === correct) return false;
+  if (fake.includes(correct) || correct.includes(fake)) return false;
+
+  // Check Levenshtein distance for short answers
+  if (correct.length < 15) {
+    const distance = levenshteinDistance(fake, correct);
+    if (distance < 3) return false;
   }
 
-  // Validate that an answer is not too similar to the correct answer
-  export function isValidFakeAnswer(fakeAnswer: string, correctAnswer: string): boolean {
-    const fake = fakeAnswer.toLowerCase().trim();
-    const correct = correctAnswer.toLowerCase().trim();
+  return true;
+}
 
-    // Check if they're too similar
-    if (fake === correct) return false;
-    if (fake.includes(correct) || correct.includes(fake)) return false;
+// Simple Levenshtein distance implementation
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
 
-    // Check Levenshtein distance for short answers
-    if (correct.length < 15) {
-      const distance = levenshteinDistance(fake, correct);
-      if (distance < 3) return false;
-    }
-
-    return true;
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
   }
 
-  // Simple Levenshtein distance implementation
-  function levenshteinDistance(a: string, b: string): number {
-    const matrix: number[][] = [];
-
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
       }
     }
-
-    return matrix[b.length][a.length];
   }
+
+  return matrix[b.length][a.length];
+}
