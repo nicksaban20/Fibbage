@@ -472,6 +472,13 @@ export default class FibbageServer implements Party.Server {
       votes: [],
     });
 
+    // FINAL SAFETY CHECK: Force all answers to uppercase
+    answers.forEach(a => {
+      if (a.text) {
+        a.text = a.text.toUpperCase();
+      }
+    });
+
     // Shuffle answers
     this.state.answers = shuffleArray(answers);
 

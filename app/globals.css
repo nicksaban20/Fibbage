@@ -350,7 +350,6 @@ h3 {
   /* Fix contrast */
   text-align: left;
   overflow: hidden;
-  text-transform: uppercase;
 }
 
 .answer-card::before {
