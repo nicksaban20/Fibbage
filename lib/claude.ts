@@ -202,7 +202,7 @@ export async function generateTriviaQuestion(
               role: 'user',
               content: `Generate ONE unique Fibbage trivia question.
 
-TOPIC: ${randomCategory} - specifically something ${randomStyle} ${randomSubTopic}
+TOPIC: ${randomCategory} - specifically something ${randomStyle}
 SESSION: ${timeSeed}-${Math.random().toString(36).slice(2, 6)}
 
 FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
@@ -249,27 +249,33 @@ ANSWER QUALITY (CRITICAL):
 - If the answer is a technical term, the question is BAD.
 - Good answers are often: common objects, animals, body parts, food, or simple actions.
 
-BANNED TOPICS (DO NOT GENERATE):
-- "Largest organ" / Skin
-- "King of the jungle" / Lion
-- "Capital of" / City names
-- "Eiffel Tower" / Paris
-- "Mona Lisa" / Da Vinci
-
 EXAMPLES OF PERFECT FIBBAGE QUESTIONS (Study the style):
-- "In 1386, a pig in France was executed by public hanging for the murder of a _____." (Answer: Child)
-- "The tiny plastic bit at the end of a shoelace is called an _____." (Answer: Aglet)
-- "A group of pugs is surprisingly referred to as a _____." (Answer: Grumble)
-- "The Code of Hammurabi decreed that bartenders who watered down beer should be _____." (Answer: Executed)
-- "In 1923, jockey Frank Hayes won a race at Belmont Park despite being _____." (Answer: Dead)
-- "Usually found in Spain, Caganer is a traditional nativity figurine that represents a man _____." (Answer: Pooping)
-- "The inventor of the Pringles can is now buried in a _____." (Answer: Pringles Can)
-- "The total weight of all the ants on Earth is comparable to the total weight of all the _____." (Answer: Humans)
-- "Harry Houdini once threatened to shoot all of these people: _____." (Answer: Psychics)
-- "The originally planned name for the search engine that became Google was _____." (Answer: Backrub)
-- "Mike Tyson once tweeted 'I'm a bad _____.'" (Answer: Bowler)
-- "Leo Granit Kraft is a world champion in an unusual sport that combines boxing and _____." (Answer: Chess)
-- "Dasypygal is an adjective meaning 'having _____ buttocks'." (Answer: Hairy)
+- "Owning 55,000 of them, Ted Turner has the world's largest private collection of _____." (Answer: Bison)
+- "A study published in the journal Anthrozoo reported that cows produce 5% more milk when they are given _____." (Answer: Names)
+- "The electric chair was invented by a professional _____ named Alfred Southwick." (Answer: Dentist)
+- "People in Damariscotta, Maine hold an annual race where they use _____ as boats." (Answer: Pumpkins)
+- "Andrew Wilson, a man from Branson, Missouri, legally changed his name to simply _____." (Answer: They)
+- "As a young student in Buenos Aires, Pope Francis worked as a _____." (Answer: Bouncer)
+- "The name for a group of porcupines is a _____." (Answer: Prickle)
+- "The name of the first chimp sent into space was _____." (Answer: Ham)
+- "Dr. Seuss is credited with coining this common derogatory term in his 1950 book If I Ran the Zoo: _____." (Answer: Nerd)
+- "The original name for the search engine that became Google was _____." (Answer: Backrub)
+- "The fishing company E21 makes a very peculiar fishing rod that is composed of 70% _____." (Answer: Carrots)
+- "The first reporting on the Wright Brothers' flights appeared not in a newspaper or on radio, but in a small journal dedicated to the topic of _____." (Answer: Beekeeping)
+- "There's a novelty museum in Arlington, Massachusetts that only collects food that has been _____." (Answer: Burnt)
+- "On January 13, 2014, U.S. Secretary of State John Kerry presented to Russian Foreign Minister Sergei Lavrov the odd gift of two very large _____." (Answer: Potatoes)
+- "Suffering from an extremely rare side effect after getting hip surgery in 2010, a Dutch man has alienated his family because he cannot stop _____." (Answer: Laughing)
+- "Ben and Jerry only started making ice cream because it was too expensive to make _____." (Answer: Bagels)
+- "A spectator in an Illinois courtroom was sentenced to six months in jail for _____ during a trial." (Answer: Yawning)
+- "The sports teams at Freeport High School in Illinois are oddly named after an inanimate object. The teams are called the Freeport _____." (Answer: Pretzels)
+- "While president of the United States, John Adams had a dog named Juno and a dog named _____." (Answer: Satan)
+- "A Kickstarter campaign met its $30,000 goal on April 7, 2012 for its shoes designed for _____." (Answer: Atheists)
+- "In 2003, Morocco made the highly unusual offer to send 2,000 _____ to assist the United States' war efforts in Iraq." (Answer: Monkeys)
+- "Belmont University in Nashville has offered a class called 'Oh, Look, a _____.'" (Answer: Chicken)
+- "Under Peter the Great, noblemen had to pay 100 rubles a year for a _____ license." (Answer: Beard)
+- "In 2000, Australia had its largest ever online petition, which called for an end to rising _____ prices." (Answer: Beer)
+- "Although very unconventional, farmer William von Schneidau feeds his pigs _____." (Answer: Marijuana)
+- "A 2013 Pakistani game show caused a controversy when their grand prize was a _____." (Answer: Baby)
 
 ${previousQuestionsContext}
 
