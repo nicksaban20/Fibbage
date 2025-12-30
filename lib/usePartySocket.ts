@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import PartySocket from 'partysocket';
-import type { GameState, ClientMessage, ServerMessage } from './game-types';
+import type { GameState, ClientMessage, ServerMessage, GameConfig } from './game-types';
+import { DEFAULT_CONFIG } from './game-types';
 
 const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST || 'localhost:1999';
 
@@ -123,7 +124,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     sendMessage({ type: 'join', name, isHost });
   }, [sendMessage]);
 
-  const startGame = useCallback((config: { totalRounds: number; answerTimeSeconds: number; votingTimeSeconds: number; aiAnswerCount: number }) => {
+  const startGame = useCallback((config: GameConfig) => {
     log('🎮 Starting game with config:', config);
     sendMessage({ type: 'start-game', config });
   }, [sendMessage]);
