@@ -52,15 +52,21 @@ export async function fetchSingleQuestion(
   apiKey?: string,
   previousQuestions: string[] = [],
   shouldVerify: boolean = false,
-  model: string = 'claude-haiku-4-5-20251001'
+  model: string = 'claude-haiku-4-5-20251001',
+  logger?: (msg: string) => void
 ): Promise<Question> {
-  console.log(`[Trivia] Fetching single question (Model: ${model})...`);
+  const log = (msg: string) => {
+    console.log(msg);
+    if (logger) logger(msg);
+  };
+
+  log(`[Trivia] Fetching single question (Model: ${model})...`);
 
   // Try Claude first (with random category and temperature for variety)
   try {
-    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify, model);
+    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify, model, logger);
     if (question) {
-      console.log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (category: ${question.category})`);
+      log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (category: ${question.category})`);
       return question;
     }
   } catch (error) {

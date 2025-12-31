@@ -266,7 +266,8 @@ export default class FibbageServer implements Party.Server {
       this.room.env.ANTHROPIC_API_KEY as string,
       [],
       this.state.config.verifyAnswers, // Pass verification flag
-      this.state.config.model // Pass selected model
+      this.state.config.model, // Pass selected model
+      (msg) => this.broadcastLog(msg) // Pass logger
     );
     this.questions = [firstQuestion];
 
@@ -314,7 +315,8 @@ export default class FibbageServer implements Party.Server {
           this.room.env.ANTHROPIC_API_KEY as string,
           this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
           this.state.config.verifyAnswers, // Pass verification flag
-          this.state.config.model
+          this.state.config.model,
+          (msg) => this.broadcastLog(msg)
         );
       }
     }
@@ -342,7 +344,8 @@ export default class FibbageServer implements Party.Server {
         this.room.env.ANTHROPIC_API_KEY as string,
         [previousText],
         this.state.config.verifyAnswers,
-        this.state.config.model
+        this.state.config.model,
+        (msg) => this.broadcastLog(msg)
       );
     }
 

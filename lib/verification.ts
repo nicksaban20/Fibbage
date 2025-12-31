@@ -61,16 +61,22 @@ async function searchTavily(query: string, apiKey: string): Promise<SearchResult
 export async function verifyFactWithSearch(
     questionText: string,
     answerText: string,
-    model: string = 'claude-haiku-4-5-20251001'
+    model: string = 'claude-haiku-4-5-20251001',
+    logger?: (msg: string) => void
 ): Promise<{ verified: boolean; reason: string }> {
+    const log = (msg: string) => {
+        console.log(msg);
+        if (logger) logger(msg);
+    };
+
     const apiKey = process.env.TAVILY_API_KEY || process.env.SEARCH_API_KEY;
     if (!apiKey) {
-        console.warn('[Verification] No search API key found (TAVILY_API_KEY). Skipping verification.');
+        log('[Verification] No search API key found (TAVILY_API_KEY). Skipping verification.');
         return { verified: true, reason: 'Skipped (No API Key)' }; // Fail open to allow game to proceed
     }
 
     const factStatement = `Question: ${questionText}\nAnswer: ${answerText}`;
-    console.log(`[Verification] Verifying: "${factStatement}"`);
+    log(`[Verification] Verifying: "${factStatement}"`);
 
     // 1. Search for context
     const searchResults = await searchTavily(factStatement, apiKey);

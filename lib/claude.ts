@@ -147,7 +147,8 @@ export async function generateTriviaQuestion(
   apiKey?: string,
   previousQuestions: string[] = [],
   shouldVerify: boolean = false,
-  model: string = 'claude-haiku-4-5-20251001'
+  model: string = 'claude-haiku-4-5-20251001',
+  logger?: (msg: string) => void
 ): Promise<Question | null> {
   const MAX_GENERATION_ATTEMPTS = 3;
 
@@ -338,7 +339,12 @@ ANSWER: [1 word answer]`
       // Verification Step
       if (shouldVerify) {
         console.log(`[Claude] Verification enabled. Checking fact: "${questionMatch ? questionMatch[1].trim() : 'N/A'}" -> "${answerMatch ? answerMatch[1].trim() : 'N/A'}"`);
-        const verification = await verifyFactWithSearch(questionMatch ? questionMatch[1].trim() : '', answerMatch ? answerMatch[1].trim() : '', model);
+        const verification = await verifyFactWithSearch(
+          questionMatch ? questionMatch[1].trim() : '',
+          answerMatch ? answerMatch[1].trim() : '',
+          model,
+          logger
+        );
         if (!verification.verified) {
           console.warn(`[Claude] Fact verification failed: ${verification.reason}. Retrying question generation.`);
           continue; // Skip this attempt and try again
