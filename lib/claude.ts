@@ -340,7 +340,7 @@ ANSWER: [1 word answer]`
         console.log(`[Claude] Verification enabled. Checking fact: "${questionMatch ? questionMatch[1].trim() : 'N/A'}" -> "${answerMatch ? answerMatch[1].trim() : 'N/A'}"`);
         const verification = await verifyFactWithSearch(questionMatch ? questionMatch[1].trim() : '', answerMatch ? answerMatch[1].trim() : '', model);
         if (!verification.verified) {
-          console.warn('[Claude] Fact verification failed. Retrying question generation.');
+          console.warn(`[Claude] Fact verification failed: ${verification.reason}. Retrying question generation.`);
           continue; // Skip this attempt and try again
         }
         console.log('[Claude] Fact verified successfully.');

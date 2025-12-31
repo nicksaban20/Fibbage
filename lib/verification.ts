@@ -38,12 +38,20 @@ async function searchTavily(query: string, apiKey: string): Promise<SearchResult
         }
 
         const data = await response.json();
+        console.log(`[Verification] Tavily found ${data.results?.length || 0} results for query: "${query}"`);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return data.results.map((r: any) => ({
+        const results = data.results.map((r: any) => ({
             title: r.title,
             content: r.content,
             url: r.url
         }));
+
+        if (results.length > 0) {
+            console.log(`[Verification] Top Result: "${results[0].title}" - ${results[0].content.slice(0, 100)}...`);
+        }
+
+        return results;
     } catch (error) {
         console.error('[Verification] Search error:', error);
         return [];
@@ -71,6 +79,7 @@ export async function verifyFactWithSearch(
     }
 
     const contextString = searchResults.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n');
+    console.log(`[Verification] Context for LLM (${contextString.length} chars):\n${contextString.slice(0, 200)}...`);
 
     // 2. Ask Claude to verify
     const client = getClient();
@@ -107,8 +116,9 @@ INSTRUCTIONS:
         }
 
         try {
+            console.log(`[Verification] Raw LLM Response: ${textBlock.text}`);
             const result = JSON.parse(textBlock.text.trim());
-            console.log(`[Verification] Result: ${result.verified} (${result.reason})`);
+            console.log(`[Verification] Parsed: Verified=${result.verified}, Reason="${result.reason}"`);
             return result;
         } catch {
             console.error('[Verification] Failed to parse JSON:', textBlock.text);
