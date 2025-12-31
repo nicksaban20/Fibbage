@@ -54,12 +54,22 @@ export async function fetchSingleQuestion(
   shouldVerify: boolean = false,
   model: string = 'claude-haiku-4-5-20251001',
   logger?: (msg: string) => void,
-  tavilyApiKey?: string
+  tavilyApiKey?: string,
+  useFallbackOnly: boolean = false
 ): Promise<Question> {
   const log = (msg: string) => {
     console.log(msg);
     if (logger) logger(msg);
   };
+
+  // If fallback-only mode is enabled, skip AI and use curated questions
+  if (useFallbackOnly) {
+    log(`[Trivia] Using fallback-only mode (curated questions)`);
+    const fallbacks = getFallbackQuestions();
+    const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    log(`[Trivia] Selected fallback: "${randomFallback.text.slice(0, 50)}..."`);
+    return randomFallback;
+  }
 
   log(`[Trivia] Fetching single question (Model: ${model})...`);
 

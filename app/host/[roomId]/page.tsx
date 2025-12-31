@@ -329,9 +329,22 @@ export default function HostPage() {
                     onChange={(e) => setConfig({ ...config, model: e.target.value })}
                     style={{ cursor: 'pointer', width: '100%' }}
                   >
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast & Creative)</option>
-                    <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Smart & Logical)</option>
+                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast &amp; Creative)</option>
+                    <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Smart &amp; Logical)</option>
                   </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
+                  <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={config.useFallbackOnly || false}
+                      onChange={(e) => setConfig({ ...config, useFallbackOnly: e.target.checked })}
+                      style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                      Use Fallback Questions Only <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Curated, No AI)</span>
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>

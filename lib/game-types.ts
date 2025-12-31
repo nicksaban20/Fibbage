@@ -49,6 +49,7 @@ export interface GameConfig {
   aiAnswerCount: number; // Number of AI-generated fake answers per round
   verifyAnswers: boolean;
   model: string;
+  useFallbackOnly: boolean; // Use only curated static questions (no AI)
 }
 
 // Full game state
@@ -104,6 +105,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   aiAnswerCount: 1,
   verifyAnswers: false,
   model: 'claude-haiku-4-5-20251001',
+  useFallbackOnly: false,
 };
 
 // Scoring constants
