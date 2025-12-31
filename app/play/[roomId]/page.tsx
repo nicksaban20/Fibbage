@@ -398,32 +398,50 @@ export default function PlayerPage() {
         <div className="card-glass animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h2 style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Round Recap</h2>
 
-          {/* Find the last round result */}
-          {(() => {
-            const lastResult = gameState.roundResults[gameState.roundResults.length - 1];
-            const myScore = lastResult?.scores.find(s => s.playerId === currentPlayer.id);
-
-            return (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '5rem', marginBottom: 'var(--spacing-md)', filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))' }}>
-                  {myScore && myScore.pointsEarned > 0 ? '🎉' : '💀'}
-                </div>
-                <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--color-primary-light)', marginBottom: 'var(--spacing-sm)', textShadow: '0 0 15px rgba(168, 85, 247, 0.4)' }}>
-                  +{myScore?.pointsEarned || 0}
-                </div>
-                <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem', maxWidth: '300px', margin: '0 auto' }}>
-                  {myScore?.reason || 'Better luck next round!'}
-                </p>
-
-                <div style={{ marginTop: 'var(--spacing-2xl)', padding: 'var(--spacing-lg)', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-lg)' }}>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-xs)', textTransform: 'uppercase' }}>Total Score</div>
-                  <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>
-                    {currentPlayer.score.toLocaleString()}
-                  </div>
+          {/* Logic Branch based on Game Mode */}
+          {gameState.config.gameMode === 'quiplash' ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '5rem', marginBottom: 'var(--spacing-md)' }}>
+                🎬
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary-light)', marginBottom: 'var(--spacing-sm)' }}>
+                ROUND COMPLETE
+              </div>
+              <div style={{ marginTop: 'var(--spacing-2xl)', padding: 'var(--spacing-lg)', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-xs)', textTransform: 'uppercase' }}>Total Score</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>
+                  {currentPlayer.score.toLocaleString()}
                 </div>
               </div>
-            );
-          })()}
+            </div>
+          ) : (
+            /* FIBBAGE Logic */
+            (() => {
+              const lastResult = gameState.roundResults[gameState.roundResults.length - 1];
+              const myScore = lastResult?.scores.find(s => s.playerId === currentPlayer.id);
+
+              return (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '5rem', marginBottom: 'var(--spacing-md)', filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))' }}>
+                    {myScore && myScore.pointsEarned > 0 ? '🎉' : '💀'}
+                  </div>
+                  <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--color-primary-light)', marginBottom: 'var(--spacing-sm)', textShadow: '0 0 15px rgba(168, 85, 247, 0.4)' }}>
+                    +{myScore?.pointsEarned || 0}
+                  </div>
+                  <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem', maxWidth: '300px', margin: '0 auto' }}>
+                    {myScore?.reason || 'Better luck next round!'}
+                  </p>
+
+                  <div style={{ marginTop: 'var(--spacing-2xl)', padding: 'var(--spacing-lg)', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-lg)' }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-xs)', textTransform: 'uppercase' }}>Total Score</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>
+                      {currentPlayer.score.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          )}
 
           <p style={{ textAlign: 'center', marginTop: 'var(--spacing-xl)', color: 'var(--color-text-muted)', fontSize: '0.9rem', fontStyle: 'italic' }}>
             Look at the big screen...
@@ -484,7 +502,19 @@ export default function PlayerPage() {
       {/* QUIPLASH VOTING PHASE */}
       {(gameState?.phase === 'quiplash-voting' || gameState?.phase === 'quiplash-results') && gameState.quiplashMatchups && (() => {
         const currentMatchup = gameState.quiplashMatchups[gameState.currentMatchupIndex];
-        if (!currentMatchup) return null;
+        if (!currentMatchup) {
+          return (
+            <div className="card-glass animate-fade-in" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div className="spinner" style={{ margin: '0 auto var(--spacing-lg)' }}></div>
+                <p style={{ color: 'var(--color-text-secondary)' }}>Waiting for matchup...</p>
+                <div style={{ fontSize: '0.8rem', marginTop: '1rem', color: 'rgba(255,255,255,0.2)' }}>
+                  Debug: Matchup {gameState.currentMatchupIndex} not found
+                </div>
+              </div>
+            </div>
+          );
+        }
 
         // Check if player is in this matchup (can't vote on own answers)
         const isInMatchup = currentMatchup.answers.some(a => a.playerId === currentPlayer?.id);

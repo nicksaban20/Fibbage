@@ -591,7 +591,20 @@ export default function HostPage() {
       {/* QUIPLASH VOTING & RESULTS */}
       {(gameState.phase === 'quiplash-voting' || gameState.phase === 'quiplash-results') && gameState.quiplashMatchups && (() => {
         const currentMatchup = gameState.quiplashMatchups[gameState.currentMatchupIndex];
-        if (!currentMatchup) return null;
+        if (!currentMatchup) {
+          return (
+            <div className="card-glass animate-fade-in" style={{ textAlign: 'center', padding: 'var(--spacing-2xl)' }}>
+              <div className="spinner" style={{ margin: '0 auto var(--spacing-lg)' }}></div>
+              <p style={{ fontSize: '1.5rem', color: 'var(--color-text-secondary)' }}>Waiting for matchup data...</p>
+              <details style={{ marginTop: '1rem', color: 'rgba(255,255,255,0.2)' }}>
+                <summary>Debug Info</summary>
+                Matchup Index: {gameState.currentMatchupIndex}<br />
+                Total Matchups: {gameState.quiplashMatchups?.length || 0}
+              </details>
+              <button onClick={handleNextMatchup} className="btn-secondary" style={{ marginTop: '1rem' }}>Skip Matchup</button>
+            </div>
+          );
+        }
 
         const isResults = gameState.phase === 'quiplash-results';
 
@@ -754,93 +767,145 @@ export default function HostPage() {
       )}
 
       {/* RESULTS PHASE */}
-      {gameState.phase === 'results' && gameState.currentQuestion && (
+      {gameState.phase === 'results' && (
         <div className="animate-slide-up">
-          <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
-            <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '2rem' }}>THE REVEAL</h2>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.25rem' }}>{gameState.currentQuestion.text}</p>
-          </div>
+          {gameState.config?.gameMode === 'quiplash' ? (
+            // QUIPLASH RESULTS (Leaderboard Only)
+            <div style={{ textAlign: 'center', maxWidth: '1000px', margin: '0 auto' }}>
+              <h2 style={{ marginBottom: 'var(--spacing-xl)', fontSize: '3rem', color: 'var(--color-primary-light)' }}>
+                ROUND OVER
+              </h2>
 
-          <div className="answer-grid" style={{ maxWidth: '1200px', margin: '0 auto var(--spacing-xl)' }}>
-            {gameState.answers.map((answer) => {
-              return (
-                <div
-                  key={answer.id}
-                  className={`answer-card ${answer.isCorrect ? 'correct' : ''} ${answer.isAI ? 'ai' : ''}`}
-                  style={{
-                    cursor: 'default',
-                    opacity: answer.isCorrect ? 1 : 0.8,
-                    transform: answer.isCorrect ? 'scale(1.05)' : 'scale(1)',
-                    boxShadow: answer.isCorrect ? '0 0 30px rgba(34, 197, 94, 0.6)' : 'none',
-                    border: answer.isCorrect ? '2px solid #22c55e' : '1px solid transparent',
-                    background: answer.isCorrect ? 'rgba(34, 197, 94, 0.2)' : undefined
-                  }}
-                >
-                  {answer.votes.length > 0 && (
-                    <div className="votes">
-                      {answer.votes.map((voterId) => {
-                        const voter = gameState.players.find(p => p.id === voterId);
-                        return (
-                          <span key={voterId} className="player-avatar animate-fade-in" style={{ width: '28px', height: '28px', fontSize: '0.8rem', border: '2px solid var(--color-bg-card)' }}>
-                            {voter?.name.charAt(0).toUpperCase()}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                  <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
-                    {answer.isCorrect ? (
-                      <span style={{ color: 'var(--color-success)' }}>★ The Truth</span>
-                    ) : answer.isAI ? (
-                      <span style={{ color: 'var(--color-accent)' }}>🤖 AI Deception</span>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {answer.playerIds?.map(pid => {
-                          const p = gameState.players.find(pl => pl.id === pid);
-                          return p ? (
-                            <span key={pid} className="player-chip small" style={{ fontSize: '0.8rem', padding: '2px 8px' }}>
-                              {p.name}
-                            </span>
-                          ) : null;
-                        })}
+              <div className="card-glass" style={{ padding: 'var(--spacing-xl)', marginBottom: 'var(--spacing-xl)' }}>
+                <h3 style={{ marginBottom: 'var(--spacing-lg)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+                  LEADERBOARD
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                  {[...gameState.players].filter(p => !p.isHost).sort((a, b) => b.score - a.score).map((player, index) => (
+                    <div key={player.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '1rem',
+                      background: 'rgba(255,255,255,0.05)',
+                      borderRadius: '8px',
+                      border: index === 0 ? '1px solid var(--color-primary)' : 'none'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, width: '40px', color: 'var(--color-text-muted)' }}>
+                        #{index + 1}
                       </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>{answer.text}</div>
-                  {answer.votes.length > 0 && !answer.isCorrect && !answer.isAI && (
-                    <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.9rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                      +{answer.votes.length * SCORING.FOOL_PLAYER} pts (Fooled {answer.votes.length})
+                      <div style={{ fontSize: '1.2rem', fontWeight: 600, flex: 1, textAlign: 'left' }}>
+                        {player.name}
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary-light)' }}>
+                        {player.score.toLocaleString()}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+              </div>
 
-          {/* Current Scores */}
-          <div className="card-glass" style={{ maxWidth: '700px', margin: '0 auto var(--spacing-xl)' }}>
-            <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--color-text-muted)' }}>Leaderboard</h3>
-            <div className="scoreboard">
-              {[...gameState.players]
-                .filter(p => !p.isHost)
-                .sort((a, b) => b.score - a.score)
-                .map((player, idx) => (
-                  <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`} style={{ transition: 'all 0.3s ease' }}>
-                    <span className="score-rank" style={{ opacity: idx === 0 ? 1 : 0.5 }}>
-                      {idx === 0 ? '👑' : idx + 1}
-                    </span>
-                    <span className="score-name" style={{ fontSize: '1.1rem' }}>{player.name}</span>
-                    <span className="score-points">{player.score.toLocaleString()}</span>
-                  </div>
-                ))}
+              <div style={{ textAlign: 'center' }}>
+                <button onClick={handleNextRound} disabled={isProcessing} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px', fontSize: '1.5rem', padding: '1rem 3rem' }}>
+                  {isProcessing ? 'LOADING...' : (gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →')}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : gameState.currentQuestion ? (
+            // FIBBAGE RESULTS
+            <>
+              <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
+                <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '2rem' }}>THE REVEAL</h2>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.25rem' }}>{gameState.currentQuestion.text}</p>
+              </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <button onClick={handleNextRound} disabled={isProcessing} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px' }}>
-              {isProcessing ? 'LOADING...' : (gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →')}
-            </button>
-          </div>
+              <div className="answer-grid" style={{ maxWidth: '1200px', margin: '0 auto var(--spacing-xl)' }}>
+                {gameState.answers.map((answer) => {
+                  return (
+                    <div
+                      key={answer.id}
+                      className={`answer-card ${answer.isCorrect ? 'correct' : ''} ${answer.isAI ? 'ai' : ''}`}
+                      style={{
+                        cursor: 'default',
+                        opacity: answer.isCorrect ? 1 : 0.8,
+                        transform: answer.isCorrect ? 'scale(1.05)' : 'scale(1)',
+                        boxShadow: answer.isCorrect ? '0 0 30px rgba(34, 197, 94, 0.6)' : 'none',
+                        border: answer.isCorrect ? '2px solid #22c55e' : '1px solid transparent',
+                        background: answer.isCorrect ? 'rgba(34, 197, 94, 0.2)' : undefined
+                      }}
+                    >
+                      {answer.votes.length > 0 && (
+                        <div className="votes">
+                          {answer.votes.map((voterId) => {
+                            const voter = gameState.players.find(p => p.id === voterId);
+                            return (
+                              <span key={voterId} className="player-avatar animate-fade-in" style={{ width: '28px', height: '28px', fontSize: '0.8rem', border: '2px solid var(--color-bg-card)' }}>
+                                {voter?.name.charAt(0).toUpperCase()}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-sm)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+                        {answer.isCorrect ? (
+                          <span style={{ color: 'var(--color-success)' }}>★ The Truth</span>
+                        ) : answer.isAI ? (
+                          <span style={{ color: 'var(--color-accent)' }}>🤖 AI Deception</span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {answer.playerIds?.map(pid => {
+                              const p = gameState.players.find(pl => pl.id === pid);
+                              return p ? (
+                                <span key={pid} className="player-chip small" style={{ fontSize: '0.8rem', padding: '2px 8px' }}>
+                                  {p.name}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>{answer.text}</div>
+                      {answer.votes.length > 0 && !answer.isCorrect && !answer.isAI && (
+                        <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.9rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                          +{answer.votes.length * SCORING.FOOL_PLAYER} pts (Fooled {answer.votes.length})
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Current Scores */}
+              <div className="card-glass" style={{ maxWidth: '700px', margin: '0 auto var(--spacing-xl)' }}>
+                <h3 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--color-text-muted)' }}>Leaderboard</h3>
+                <div className="scoreboard">
+                  {[...gameState.players]
+                    .filter(p => !p.isHost)
+                    .sort((a, b) => b.score - a.score)
+                    .map((player, idx) => (
+                      <div key={player.id} className={`score-row ${idx === 0 ? 'winner' : ''}`} style={{ transition: 'all 0.3s ease' }}>
+                        <span className="score-rank" style={{ opacity: idx === 0 ? 1 : 0.5 }}>
+                          {idx === 0 ? '👑' : idx + 1}
+                        </span>
+                        <span className="score-name" style={{ fontSize: '1.1rem' }}>{player.name}</span>
+                        <span className="score-points">{player.score.toLocaleString()}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <button onClick={handleNextRound} disabled={isProcessing} className="btn btn-primary btn-large animate-glow" style={{ minWidth: '200px' }}>
+                  {isProcessing ? 'LOADING...' : (gameState.currentRound >= gameState.config.totalRounds ? 'FINISH GAME' : 'NEXT ROUND →')}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <div className="spinner" style={{ margin: '0 auto' }}></div>
+              <p>Waiting for data...</p>
+              <button onClick={handleNextRound} className="btn-secondary" style={{ marginTop: '1rem' }}>Force Next</button>
+            </div>
+          )}
         </div>
       )}
 
