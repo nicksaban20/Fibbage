@@ -777,72 +777,42 @@ export default class FibbageServer implements Party.Server {
     }
   }
 
-  // Handle skipping the timer
-  handleSkipTimer(conn: Party.Connection) {
-    const sender = this.state.players.find((p) => p.id === conn.id);
-    if (!sender?.isHost) {
-      this.sendError(conn, "Only the host can skip the timer");
-      return;
-    }
 
-    if (this.state.phase === 'answering') {
-      this.broadcastLog('[FibbageServer] Host skipped answering timer');
       this.stopTimer();
-      this.endAnsweringPhase();
+this.endAnsweringPhase();
     } else if (this.state.phase === 'voting') {
-      this.broadcastLog('[FibbageServer] Host skipped voting timer');
+  this.broadcastLog('[FibbageServer] Host skipped voting timer');
+  this.stopTimer();
+  this.endVotingPhase();
+} else {
+  this.sendError(conn, "Cannot skip timer in this phase");
+}
+  }
+
+// Timer utilities
+startTimer(callback: () => void, seconds: number) {
+  this.stopTimer();
+
+  const endTime = Date.now() + seconds * 1000;
+
+  this.timer = setInterval(() => {
+    const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+    this.state.timeRemaining = remaining;
+
+    const timeMessage: ServerMessage = { type: "time-update", timeRemaining: remaining };
+    this.room.broadcast(JSON.stringify(timeMessage));
+
+    if (remaining <= 0) {
       this.stopTimer();
-      this.endVotingPhase();
-    } else {
-      this.sendError(conn, "Cannot skip timer in this phase");
+      callback();
     }
+  }, 1000);
+}
+
+stopTimer() {
+  if (this.timer) {
+    clearInterval(this.timer);
+    this.timer = null;
   }
-
-  // Handle skipping the timer
-  handleSkipTimer(conn: Party.Connection) {
-    const sender = this.state.players.find((p) => p.id === conn.id);
-    if (!sender?.isHost) {
-      this.sendError(conn, "Only the host can skip the timer");
-      return;
-    }
-
-    if (this.state.phase === 'answering') {
-      this.broadcastLog('[FibbageServer] Host skipped answering timer');
-      this.stopTimer();
-      this.endAnsweringPhase();
-    } else if (this.state.phase === 'voting') {
-      this.broadcastLog('[FibbageServer] Host skipped voting timer');
-      this.stopTimer();
-      this.endVotingPhase();
-    } else {
-      this.sendError(conn, "Cannot skip timer in this phase");
-    }
-  }
-
-  // Timer utilities
-  startTimer(callback: () => void, seconds: number) {
-    this.stopTimer();
-
-    const endTime = Date.now() + seconds * 1000;
-
-    this.timer = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-      this.state.timeRemaining = remaining;
-
-      const timeMessage: ServerMessage = { type: "time-update", timeRemaining: remaining };
-      this.room.broadcast(JSON.stringify(timeMessage));
-
-      if (remaining <= 0) {
-        this.stopTimer();
-        callback();
-      }
-    }, 1000);
-  }
-
-  stopTimer() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-  }
+}
 }
