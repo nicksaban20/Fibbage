@@ -420,6 +420,7 @@ ANSWER: [1 word answer]`
         source: 'claude' // Mark as AI-generated
       };
     } catch (error) {
+      if (logger) logger(`❌ [Claude] Error generating question: ${error}`);
       console.error('[Claude] Error generating trivia question after retries:', error);
       return null;
     }

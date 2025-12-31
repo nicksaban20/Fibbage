@@ -15,9 +15,18 @@ interface SearchResult {
     url: string;
 }
 
-// Simple Tavily Search implementation
-async function searchTavily(query: string, apiKey: string): Promise<SearchResult[]> {
+// Simple Tavily Search implementation with timeout
+async function searchTavily(query: string, apiKey: string, logger?: (msg: string) => void): Promise<SearchResult[]> {
+    const log = (msg: string) => {
+        console.log(msg);
+        if (logger) logger(msg);
+    };
+
     try {
+        // Add 5 second timeout to prevent hangs
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch('https://api.tavily.com/search', {
             method: 'POST',
             headers: {
@@ -29,16 +38,19 @@ async function searchTavily(query: string, apiKey: string): Promise<SearchResult
                 search_depth: "basic",
                 include_answer: false,
                 max_results: 3
-            })
+            }),
+            signal: controller.signal
         });
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
-            console.warn(`[Verification] Tavily search failed: ${response.status} ${response.statusText}`);
+            log(`[Verification] ⚠️ Tavily search failed: ${response.status} ${response.statusText}`);
             return [];
         }
 
         const data = await response.json();
-        console.log(`[Verification] Tavily found ${data.results?.length || 0} results for query: "${query}"`);
+        log(`[Verification] Tavily found ${data.results?.length || 0} results`);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const results = data.results.map((r: any) => ({
@@ -48,12 +60,16 @@ async function searchTavily(query: string, apiKey: string): Promise<SearchResult
         }));
 
         if (results.length > 0) {
-            console.log(`[Verification] Top Result: "${results[0].title}" - ${results[0].content.slice(0, 100)}...`);
+            log(`[Verification] Top: "${results[0].title.slice(0, 50)}..."`);
         }
 
         return results;
     } catch (error) {
-        console.error('[Verification] Search error:', error);
+        if (error instanceof Error && error.name === 'AbortError') {
+            log(`[Verification] ⚠️ Tavily search TIMEOUT (5s)`);
+        } else {
+            log(`[Verification] ⚠️ Tavily error: ${error}`);
+        }
         return [];
     }
 }
@@ -80,8 +96,9 @@ export async function verifyFactWithSearch(
     log(`[Verification] Verifying: "${factStatement}"`);
 
     // 1. Search for context
-    const searchResults = await searchTavily(factStatement, finalApiKey);
+    const searchResults = await searchTavily(factStatement, finalApiKey, logger);
     if (searchResults.length === 0) {
+        log(`[Verification] No search results, skipping verification`);
         return { verified: true, reason: 'Skipped (No Search Results)' };
     }
 
