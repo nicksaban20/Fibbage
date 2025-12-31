@@ -18,11 +18,23 @@ export default function PlayerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
-  const { isConnected, gameState, join, submitAnswer, submitVote } = usePartySocket({
+  const {
+    isConnected,
+    gameState,
+    join,
+    submitAnswer,
+    submitVote,
+    submitQuiplashAnswers,
+    submitQuiplashVote,
+    nextMatchup,
+  } = usePartySocket({
     roomId,
     onError: setError,
     onTimeUpdate: setTimeRemaining,
   });
+
+  // Quiplash state
+  const [quiplashAnswers, setQuiplashAnswers] = useState<Record<string, string>>({});
 
   // Get current player
   const currentPlayer = gameState?.players.find(p => p.name === playerName);
@@ -48,6 +60,12 @@ export default function PlayerPage() {
       setAnswer('');
     }
     if (gameState?.phase === 'voting') {
+      setSelectedAnswer(null);
+    }
+    if (gameState?.phase === 'quiplash-answering') {
+      setQuiplashAnswers({});
+    }
+    if (gameState?.phase === 'quiplash-voting') {
       setSelectedAnswer(null);
     }
     setIsSubmitting(false);
@@ -89,6 +107,37 @@ export default function PlayerPage() {
     setSelectedAnswer(answerId);
     submitVote(answerId);
   };
+
+  // Quiplash: Submit all prompt answers
+  const handleSubmitQuiplashAnswers = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isAnswered || isSubmitting) return;
+
+    const answers = Object.entries(quiplashAnswers)
+      .filter(([_, answer]) => answer.trim())
+      .map(([promptId, answer]) => ({ promptId, answer: answer.trim() }));
+
+    if (answers.length === 0) {
+      setError('Please enter at least one answer');
+      return;
+    }
+
+    setIsSubmitting(true);
+    submitQuiplashAnswers(answers);
+    setError('');
+  };
+
+  // Quiplash: Vote on a matchup
+  const handleQuiplashVote = (matchupId: string, votedPlayerId: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSelectedAnswer(votedPlayerId);
+    submitQuiplashVote(matchupId, votedPlayerId);
+  };
+
+  // Check if player has answered all prompts
+  const myPrompts = currentPlayer?.quiplashPrompts || [];
+  const isAnswered = currentPlayer?.hasSubmittedAnswer || false;
 
   const getTimerClass = () => {
     if (timeRemaining <= 5) return 'timer danger';
@@ -162,11 +211,12 @@ export default function PlayerPage() {
           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>PLAYER</div>
           <div style={{ fontWeight: 700, fontSize: '1.2rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{currentPlayer.name}</div>
         </div>
-        {(gameState?.phase === 'answering' || gameState?.phase === 'voting') && (
-          <div className={getTimerClass()} style={{ width: '50px', height: '50px', fontSize: '1.2rem', borderWidth: '3px' }}>
-            {timeRemaining}
-          </div>
-        )}
+        {(gameState?.phase === 'answering' || gameState?.phase === 'voting' ||
+          gameState?.phase === 'quiplash-answering' || gameState?.phase === 'quiplash-voting') && (
+            <div className={getTimerClass()} style={{ width: '50px', height: '50px', fontSize: '1.2rem', borderWidth: '3px' }}>
+              {timeRemaining}
+            </div>
+          )}
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SCORE</div>
           <div style={{ fontWeight: 800, fontSize: '1.5rem', color: 'var(--color-primary-light)', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>
@@ -379,6 +429,153 @@ export default function PlayerPage() {
           </p>
         </div>
       )}
+
+      {/* QUIPLASH ANSWERING PHASE */}
+      {gameState?.phase === 'quiplash-answering' && (
+        <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: 'var(--spacing-sm)' }}>💬 QUIPLASH!</h2>
+            <p style={{ color: 'var(--color-text-muted)' }}>Answer the prompts below</p>
+          </div>
+
+          {isAnswered ? (
+            <div className="card-glass" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+              <div style={{ fontSize: '4rem', marginBottom: 'var(--spacing-md)', filter: 'drop-shadow(0 0 15px var(--color-success))' }}>✓</div>
+              <h3 style={{ color: 'var(--color-success)', fontSize: '2rem' }}>ANSWERS LOCKED.</h3>
+              <p style={{ color: 'var(--color-text-muted)', marginTop: 'var(--spacing-md)' }}>
+                Waiting for other players...
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitQuiplashAnswers} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+              {myPrompts.map((prompt, index) => (
+                <div key={prompt.id} className="card-glass" style={{ padding: 'var(--spacing-lg)' }}>
+                  <p style={{ fontSize: '1rem', marginBottom: 'var(--spacing-md)', fontWeight: 600, color: 'var(--color-primary-light)' }}>
+                    Prompt {index + 1}:
+                  </p>
+                  <p style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-lg)', lineHeight: 1.4 }}>
+                    {prompt.text}
+                  </p>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Your funny answer..."
+                    value={quiplashAnswers[prompt.id] || ''}
+                    onChange={(e) => setQuiplashAnswers(prev => ({ ...prev, [prompt.id]: e.target.value }))}
+                    maxLength={80}
+                    style={{ fontSize: '1.1rem', padding: '1rem' }}
+                  />
+                </div>
+              ))}
+              <button
+                type="submit"
+                className="btn btn-primary btn-large btn-full animate-glow"
+                disabled={isSubmitting || Object.values(quiplashAnswers).every(a => !a.trim())}
+                style={{ fontSize: '1.2rem', padding: '1.2rem' }}
+              >
+                {isSubmitting ? 'SUBMITTING...' : 'SUBMIT ANSWERS'}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* QUIPLASH VOTING PHASE */}
+      {(gameState?.phase === 'quiplash-voting' || gameState?.phase === 'quiplash-results') && gameState.quiplashMatchups && (() => {
+        const currentMatchup = gameState.quiplashMatchups[gameState.currentMatchupIndex];
+        if (!currentMatchup) return null;
+
+        // Check if player is in this matchup (can't vote on own answers)
+        const isInMatchup = currentMatchup.answers.some(a => a.playerId === currentPlayer?.id);
+        const hasVoted = currentPlayer?.hasVoted || false;
+        const isResults = gameState.phase === 'quiplash-results';
+
+        return (
+          <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: 'var(--spacing-sm)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                {isResults ? 'RESULTS' : 'VOTE!'}
+              </h2>
+              <p style={{ fontSize: '1.1rem', fontWeight: 600, padding: '0 var(--spacing-md)', lineHeight: 1.4 }}>
+                {currentMatchup.prompt.text}
+              </p>
+            </div>
+
+            {isInMatchup && !isResults ? (
+              <div className="card-glass" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                <div style={{ fontSize: '4rem', marginBottom: 'var(--spacing-md)' }}>🙈</div>
+                <h3 style={{ color: 'var(--color-primary-light)', fontSize: '1.5rem' }}>YOUR MATCHUP!</h3>
+                <p style={{ color: 'var(--color-text-muted)', marginTop: 'var(--spacing-md)' }}>
+                  Wait and see who votes for your answer!
+                </p>
+              </div>
+            ) : hasVoted && !isResults ? (
+              <div className="card-glass" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                <div style={{ fontSize: '4rem', marginBottom: 'var(--spacing-md)', filter: 'drop-shadow(0 0 15px var(--color-primary))' }}>🗳️</div>
+                <h3 style={{ color: 'var(--color-primary-light)', fontSize: '2rem' }}>VOTE CAST.</h3>
+                <p style={{ color: 'var(--color-text-muted)', marginTop: 'var(--spacing-md)' }}>
+                  Waiting for results...
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', flex: 1 }}>
+                {currentMatchup.answers.map((answer, index) => {
+                  const voteCount = answer.votes.length;
+                  const totalVotes = currentMatchup.answers.reduce((sum, a) => sum + a.votes.length, 0);
+                  const votePercent = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+                  const isWinner = isResults && votePercent > 50;
+                  const isQuiplash = isResults && votePercent === 100 && totalVotes > 0;
+
+                  return (
+                    <button
+                      key={answer.playerId}
+                      onClick={() => !isResults && handleQuiplashVote(currentMatchup.id, answer.playerId)}
+                      disabled={isSubmitting || isResults}
+                      className={`answer-card ${selectedAnswer === answer.playerId ? 'selected' : ''} ${isWinner ? 'correct' : ''}`}
+                      style={{
+                        textAlign: 'left',
+                        padding: 'var(--spacing-lg)',
+                        width: '100%',
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {isResults && (
+                        <div style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${votePercent}%`,
+                          background: isQuiplash ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255,255,255,0.1)',
+                          transition: 'width 0.5s ease-out'
+                        }} />
+                      )}
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>
+                          {answer.text}
+                        </div>
+                        {isResults && (
+                          <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                            {answer.playerName}
+                            <span style={{ marginLeft: '0.5rem', color: isQuiplash ? 'var(--color-primary-light)' : 'inherit' }}>
+                              {isQuiplash ? '🎉 QUIPLASH!' : `${votePercent}%`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* GAME OVER */}
       {gameState?.phase === 'game-over' && (
