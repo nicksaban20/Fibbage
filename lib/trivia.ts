@@ -62,6 +62,9 @@ export async function fetchSingleQuestion(
     if (logger) logger(msg);
   };
 
+  // Debug: log the useFallbackOnly value
+  log(`[Trivia] useFallbackOnly=${useFallbackOnly}`);
+
   // If fallback-only mode is enabled, skip AI and use curated questions
   if (useFallbackOnly) {
     log(`[Trivia] Using fallback-only mode (curated questions)`);
