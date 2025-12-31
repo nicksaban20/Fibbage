@@ -310,7 +310,7 @@ export default function PlayerPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', paddingBottom: '2rem' }}>
               {gameState.answers
-                .filter(a => !a.playerIds.includes(currentPlayer.id)) // Can't vote for own answer
+                .filter(a => !a.playerIds?.includes(currentPlayer.id)) // Can't vote for own answer
                 .map((answer, index) => (
                   <button
                     key={answer.id}

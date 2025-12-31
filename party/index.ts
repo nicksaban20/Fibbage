@@ -424,17 +424,50 @@ export default class FibbageServer implements Party.Server {
     const answers: Answer[] = [];
 
     // Add player answers (normalized to Title Case)
+    // Use a map to merge identical answers
+    const playerAnswerMap = new Map<string, { originalText: string; playerIds: string[] }>();
+
     this.state.players.forEach((p) => {
       if (p.currentAnswer) {
-        answers.push({
-          id: generateId(),
-          text: this.normalizeAnswerCase(p.currentAnswer),
-          playerId: p.id,
-          isCorrect: false,
-          isAI: false,
-          votes: [],
-        });
+        // Normalize for case-insensitive comparison
+        const normalized = this.normalizeAnswerCase(p.currentAnswer);
+        const correctNormalized = this.normalizeAnswerCase(this.state.currentQuestion!.correctAnswer);
+
+        // If they wrote the correct answer, they don't get a lie card (it's filtered out effectively, or treated as correct? 
+        // Actually, usually in Fibbage, if you write the truth, you are told "You wrote the truth!" and forced to write another lie.
+        // But for simplicity/MVP, we often just don't show it or let them crash.
+        // Better: If they wrote truth, we should probably treat it as them not submitting a lie?
+        // Or better yet, just prevent it on client side.
+        // For now, let's just merge them. The game loop will handle "Truth" separately.
+        // Actually, if they write the truth, it shouldn't appear as a "Lie".
+
+        if (normalized === correctNormalized) {
+          // They wrote the correct answer! They don't get a lie card.
+          // Ideally we'd tell them, but here we just skip adding it to the answers list so it doesn't duplicate the truth.
+          return;
+        }
+
+        if (playerAnswerMap.has(normalized)) {
+          playerAnswerMap.get(normalized)!.playerIds.push(p.id);
+        } else {
+          playerAnswerMap.set(normalized, {
+            originalText: p.currentAnswer, // Keep first author's casing
+            playerIds: [p.id]
+          });
+        }
       }
+    });
+
+    // Convert map to Answer objects
+    playerAnswerMap.forEach((entry, _) => {
+      answers.push({
+        id: generateId(),
+        text: this.normalizeAnswerCase(entry.originalText), // Ensure consistent casing
+        playerIds: entry.playerIds,
+        isCorrect: false,
+        isAI: false,
+        votes: [],
+      });
     });
 
     // Generate AI fake answers in PARALLEL (much faster than sequential)
