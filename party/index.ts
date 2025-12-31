@@ -581,7 +581,7 @@ export default class FibbageServer implements Party.Server {
       return;
     }
 
-    if (answer.playerId === conn.id) {
+    if (answer.playerIds.includes(conn.id)) {
       this.sendError(conn, "Cannot vote for your own answer");
       return;
     }
@@ -620,12 +620,20 @@ export default class FibbageServer implements Party.Server {
       }
 
       // Check if anyone voted for this player's answer
-      const playerAnswer = this.state.answers.find((a) => a.playerId === player.id);
+      const playerAnswer = this.state.answers.find((a) => a.playerIds.includes(player.id));
       if (playerAnswer) {
-        const fooledCount = playerAnswer.votes.length;
-        if (fooledCount > 0) {
-          points += fooledCount * SCORING.FOOL_PLAYER;
-          reasons.push("Fooled " + fooledCount + " player" + (fooledCount > 1 ? "s" : "") + "!");
+        const totalVotes = playerAnswer.votes.length;
+        if (totalVotes > 0) {
+          // SPLIT POINTS logic: Total points divided by number of authors
+          // e.g. 1000 pts / 2 authors = 500 pts each
+          const totalPoints = totalVotes * SCORING.FOOL_PLAYER;
+          const pointsShare = Math.floor(totalPoints / playerAnswer.playerIds.length);
+
+          points += pointsShare;
+
+          const reasonText = `Fooled ${totalVotes} player${totalVotes > 1 ? "s" : ""}!`;
+          // If split, mention it? Optional. "Fooled X players (Split)"
+          reasons.push(reasonText + (playerAnswer.playerIds.length > 1 ? " (Split)" : ""));
         }
       }
 
