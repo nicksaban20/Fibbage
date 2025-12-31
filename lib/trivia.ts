@@ -53,7 +53,8 @@ export async function fetchSingleQuestion(
   previousQuestions: string[] = [],
   shouldVerify: boolean = false,
   model: string = 'claude-haiku-4-5-20251001',
-  logger?: (msg: string) => void
+  logger?: (msg: string) => void,
+  tavilyApiKey?: string
 ): Promise<Question> {
   const log = (msg: string) => {
     console.log(msg);
@@ -64,7 +65,7 @@ export async function fetchSingleQuestion(
 
   // Try Claude first (with random category and temperature for variety)
   try {
-    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify, model, logger);
+    const question = await generateTriviaQuestion(apiKey, previousQuestions, shouldVerify, model, logger, tavilyApiKey);
     if (question) {
       log(`[Trivia] Claude generated: "${question.text.slice(0, 50)}..." (category: ${question.category})`);
       return question;

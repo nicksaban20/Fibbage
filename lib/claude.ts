@@ -148,7 +148,8 @@ export async function generateTriviaQuestion(
   previousQuestions: string[] = [],
   shouldVerify: boolean = false,
   model: string = 'claude-haiku-4-5-20251001',
-  logger?: (msg: string) => void
+  logger?: (msg: string) => void,
+  tavilyApiKey?: string
 ): Promise<Question | null> {
   const MAX_GENERATION_ATTEMPTS = 3;
 
@@ -342,7 +343,7 @@ ANSWER: [1 word answer]`
         const verification = await verifyFactWithSearch(
           questionMatch ? questionMatch[1].trim() : '',
           answerMatch ? answerMatch[1].trim() : '',
-          undefined, // apiKey - will fall back to env
+          tavilyApiKey, // Pass the Tavily API key from server
           model,
           logger
         );

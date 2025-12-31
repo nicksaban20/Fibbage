@@ -267,7 +267,8 @@ export default class FibbageServer implements Party.Server {
       [],
       this.state.config.verifyAnswers, // Pass verification flag
       this.state.config.model, // Pass selected model
-      (msg) => this.broadcastLog(msg) // Pass logger
+      (msg) => this.broadcastLog(msg), // Pass logger
+      this.room.env.TAVILY_API_KEY as string // Pass Tavily API key
     );
     this.questions = [firstQuestion];
 
@@ -316,7 +317,8 @@ export default class FibbageServer implements Party.Server {
           this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
           this.state.config.verifyAnswers, // Pass verification flag
           this.state.config.model,
-          (msg) => this.broadcastLog(msg)
+          (msg) => this.broadcastLog(msg),
+          this.room.env.TAVILY_API_KEY as string
         );
       }
     }
@@ -345,7 +347,8 @@ export default class FibbageServer implements Party.Server {
         [previousText],
         this.state.config.verifyAnswers,
         this.state.config.model,
-        (msg) => this.broadcastLog(msg)
+        (msg) => this.broadcastLog(msg),
+        this.room.env.TAVILY_API_KEY as string
       );
     }
 
