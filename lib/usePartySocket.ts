@@ -160,6 +160,11 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     sendMessage({ type: 'kick-player', playerId });
   }, [sendMessage]);
 
+  const skipTimer = useCallback(() => {
+    log('⏩ Skipping timer');
+    sendMessage({ type: 'skip-timer' });
+  }, [sendMessage]);
+
   return {
     isConnected,
     gameState,
@@ -171,6 +176,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     playAgain,
     leave,
     kickPlayer,
+    skipTimer,
   };
 }
 
