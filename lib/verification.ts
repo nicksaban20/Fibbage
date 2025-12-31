@@ -110,27 +110,24 @@ export async function verifyFactWithSearch(
     const client = getClient(anthropicApiKey);
     try {
         const message = await client.messages.create({
-            model: model, // Use selected model
-            max_tokens: 200,
+            model: model,
+            max_tokens: 150,
             temperature: 0,
             messages: [
                 {
                     role: 'user',
-                    content: `You are a Fact Checker for a trivia game.
-Verify if the following TRIVIA FACT is supported by the SEARCH RESULTS.
+                    content: `You are a fact checker for a trivia game. Is this fact accurate?
 
-TRIVIA FACT:
-${factStatement}
+FACT: "${questionText.replace('_____', answerText)}"
 
 SEARCH RESULTS:
 ${contextString}
 
-INSTRUCTIONS:
-- Determine if the "Answer" is effectively correct for the "Question" based on the results.
-- Minor wording differences are fine (e.g. "USA" vs "United States").
-- If the search results contradict the answer, reject it.
-- If the search results are unrelated, lean towards rejecting (hallucination risk), unless it's common knowledge (but for Fibbage it shouldn't be).
-- Respond with JSON: { "verified": boolean, "reason": "short explanation" }`
+RULES:
+- If the search results SUPPORT or DON'T CONTRADICT the fact, reply: {"verified":true,"reason":"brief explanation"}
+- If the search results CONTRADICT the fact, reply: {"verified":false,"reason":"brief explanation"}
+- If unsure but fact seems plausible, lean towards verified=true (the game should proceed)
+- ONLY output valid JSON, nothing else`
                 }
             ]
         });
@@ -140,21 +137,41 @@ INSTRUCTIONS:
             return { verified: true, reason: 'Verification Model Error' };
         }
 
+        // Try to extract JSON from response (handle markdown code blocks etc)
+        let responseText = textBlock.text.trim();
+
+        // Remove markdown code blocks if present
+        responseText = responseText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+        responseText = responseText.replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+
         try {
-            console.log(`[Verification] Raw LLM Response: ${textBlock.text}`);
-            const result = JSON.parse(textBlock.text.trim());
-            console.log(`[Verification] Parsed: Verified=${result.verified}, Reason="${result.reason}"`);
+            const result = JSON.parse(responseText);
+            log(`[Verification] ${result.verified ? '✅' : '❌'} ${result.reason}`);
             return result;
         } catch {
-            console.error('[Verification] Failed to parse JSON:', textBlock.text);
-            // Fallback: check if text contains "true"
-            const lower = textBlock.text.toLowerCase();
-            const verified = lower.includes('true') && !lower.includes('false');
-            return { verified, reason: 'JSON Parse Error' };
+            // Fallback: look for verified patterns in text
+            const lower = responseText.toLowerCase();
+            const hasTrue = lower.includes('"verified":true') || lower.includes('"verified": true');
+            const hasFalse = lower.includes('"verified":false') || lower.includes('"verified": false');
+
+            if (hasTrue && !hasFalse) {
+                log(`[Verification] ✅ (parsed from text)`);
+                return { verified: true, reason: 'Parsed from non-JSON response' };
+            } else if (hasFalse) {
+                // Extract reason if possible
+                const reasonMatch = responseText.match(/"reason"\s*:\s*"([^"]+)"/);
+                const reason = reasonMatch ? reasonMatch[1] : 'Failed verification';
+                log(`[Verification] ❌ ${reason}`);
+                return { verified: false, reason };
+            }
+
+            // Default to verified if we can't parse (game should proceed)
+            log(`[Verification] ⚠️ Could not parse response, allowing question`);
+            return { verified: true, reason: 'Parse error (allowed by default)' };
         }
 
     } catch (error) {
-        console.error('[Verification] LLM check failed:', error);
+        log(`[Verification] ⚠️ Error: ${error}`);
         return { verified: true, reason: 'LLM Error' };
     }
 }
