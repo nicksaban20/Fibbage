@@ -1,11 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-// Re-implement getClient locally to avoid circular deps or move to shared utils
-function getClient(): Anthropic {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-        throw new Error('ANTHROPIC_API_KEY is not set');
-    }
+// Create Anthropic client with explicit API key (process.env doesn't work in PartyKit)
+function getClient(apiKey: string): Anthropic {
     return new Anthropic({ apiKey });
 }
 
@@ -77,7 +73,8 @@ async function searchTavily(query: string, apiKey: string, logger?: (msg: string
 export async function verifyFactWithSearch(
     questionText: string,
     answerText: string,
-    apiKey?: string,
+    tavilyApiKey?: string,
+    anthropicApiKey?: string,
     model: string = 'claude-haiku-4-5-20251001',
     logger?: (msg: string) => void
 ): Promise<{ verified: boolean; reason: string }> {
@@ -86,27 +83,31 @@ export async function verifyFactWithSearch(
         if (logger) logger(msg);
     };
 
-    const finalApiKey = apiKey || process.env.TAVILY_API_KEY || process.env.SEARCH_API_KEY;
-    if (!finalApiKey) {
-        log('[Verification] No search API key found (TAVILY_API_KEY). Skipping verification.');
-        return { verified: true, reason: 'Skipped (No API Key)' }; // Fail open to allow game to proceed
+    if (!tavilyApiKey) {
+        log('[Verification] No Tavily API key. Skipping verification.');
+        return { verified: true, reason: 'Skipped (No Tavily API Key)' };
+    }
+
+    if (!anthropicApiKey) {
+        log('[Verification] No Anthropic API key. Skipping verification.');
+        return { verified: true, reason: 'Skipped (No Anthropic API Key)' };
     }
 
     const factStatement = `Question: ${questionText}\nAnswer: ${answerText}`;
     log(`[Verification] Verifying: "${factStatement}"`);
 
     // 1. Search for context
-    const searchResults = await searchTavily(factStatement, finalApiKey, logger);
+    const searchResults = await searchTavily(factStatement, tavilyApiKey, logger);
     if (searchResults.length === 0) {
         log(`[Verification] No search results, skipping verification`);
         return { verified: true, reason: 'Skipped (No Search Results)' };
     }
 
     const contextString = searchResults.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n');
-    console.log(`[Verification] Context for LLM (${contextString.length} chars):\n${contextString.slice(0, 200)}...`);
+    log(`[Verification] Got ${searchResults.length} results, asking Claude to verify...`);
 
     // 2. Ask Claude to verify
-    const client = getClient();
+    const client = getClient(anthropicApiKey);
     try {
         const message = await client.messages.create({
             model: model, // Use selected model

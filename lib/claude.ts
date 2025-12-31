@@ -359,6 +359,7 @@ ANSWER: [1 word answer]`
           qText,
           aText,
           tavilyApiKey,
+          apiKey, // Pass Anthropic API key for Claude verification
           model,
           logger
         );
