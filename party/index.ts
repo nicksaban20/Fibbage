@@ -267,7 +267,7 @@ export default class FibbageServer implements Party.Server {
       [],
       this.state.config.verifyAnswers, // Pass verification flag
       this.state.config.model, // Pass selected model
-      (msg) => this.broadcastLog(msg), // Pass logger
+      (msg) => this.broadcastLog(`[CURRENT R1] ${msg}`), // Pass logger with context
       this.room.env.TAVILY_API_KEY as string // Pass Tavily API key
     );
     this.questions = [firstQuestion];
@@ -317,7 +317,7 @@ export default class FibbageServer implements Party.Server {
           this.state.currentQuestion ? [this.state.currentQuestion.text] : [],
           this.state.config.verifyAnswers, // Pass verification flag
           this.state.config.model,
-          (msg) => this.broadcastLog(msg),
+          (msg) => this.broadcastLog(`[CURRENT R${this.state.currentRound}] ${msg}`),
           this.room.env.TAVILY_API_KEY as string
         );
       }
@@ -342,12 +342,13 @@ export default class FibbageServer implements Party.Server {
     if (this.state.currentRound < this.state.config.totalRounds) {
       // Safe access to text
       const previousText = question ? question.text : "";
+      this.broadcastLog(`🔮 [PRE-FETCH] Starting to generate Round ${this.state.currentRound + 1} question in background...`);
       this.nextQuestionPromise = fetchSingleQuestion(
         this.room.env.ANTHROPIC_API_KEY as string,
         [previousText],
         this.state.config.verifyAnswers,
         this.state.config.model,
-        (msg) => this.broadcastLog(msg),
+        (msg) => this.broadcastLog(`[PRE-FETCH R${this.state.currentRound + 1}] ${msg}`),
         this.room.env.TAVILY_API_KEY as string
       );
     }
