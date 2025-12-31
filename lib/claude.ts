@@ -342,6 +342,7 @@ ANSWER: [1 word answer]`
         const verification = await verifyFactWithSearch(
           questionMatch ? questionMatch[1].trim() : '',
           answerMatch ? answerMatch[1].trim() : '',
+          undefined, // apiKey - will fall back to env
           model,
           logger
         );
