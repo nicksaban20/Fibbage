@@ -49,15 +49,65 @@ export default class FibbageServer implements Party.Server {
     this.state = createInitialState(roomCode);
   }
 
-  // Normalize answer text to UPPERCASE so all answers look uniform and hide typing differences
+  // Simple pluralization helper - converts common plurals to singular
+  private singularize(word: string): string {
+    const w = word.toLowerCase();
+
+    // Handle common irregular plurals
+    const irregulars: Record<string, string> = {
+      'children': 'child', 'people': 'person', 'men': 'man', 'women': 'woman',
+      'mice': 'mouse', 'geese': 'goose', 'feet': 'foot', 'teeth': 'tooth',
+      'oxen': 'ox', 'cacti': 'cactus', 'fungi': 'fungus', 'alumni': 'alumnus',
+    };
+    if (irregulars[w]) return irregulars[w];
+
+    // Skip short words (2 chars or less)
+    if (w.length <= 2) return w;
+
+    // Handle -ies -> -y (e.g., "babies" -> "baby")
+    if (w.endsWith('ies') && w.length > 3) {
+      return w.slice(0, -3) + 'y';
+    }
+
+    // Handle -ves -> -f/-fe (e.g., "wolves" -> "wolf", "knives" -> "knife")
+    if (w.endsWith('ves')) {
+      // Check if original singular ends in 'f' or 'fe'
+      const stem = w.slice(0, -3);
+      return stem + 'f'; // Could be 'fe' but 'f' is more common
+    }
+
+    // Handle -es for words ending in s, x, z, ch, sh (e.g., "churches" -> "church")
+    if (w.endsWith('es') && w.length > 2) {
+      const stem = w.slice(0, -2);
+      if (stem.endsWith('ch') || stem.endsWith('sh') || stem.endsWith('s') ||
+        stem.endsWith('x') || stem.endsWith('z')) {
+        return stem;
+      }
+      // For other -es endings, try removing just 's' first
+      if (w.endsWith('ses') || w.endsWith('xes') || w.endsWith('zes')) {
+        return w.slice(0, -2);
+      }
+    }
+
+    // Handle regular -s plurals (e.g., "cats" -> "cat")
+    if (w.endsWith('s') && !w.endsWith('ss') && w.length > 2) {
+      return w.slice(0, -1);
+    }
+
+    return w;
+  }
+
+  // Normalize answer text to UPPERCASE and singular form for consistent merging
   private normalizeAnswerCase(text: string): string {
     if (!text || text.trim().length === 0) {
-      // this.broadcastLog('[FibbageServer] normalizeAnswerCase: Empty input');
       return text;
     }
-    const normalized = text.trim().toUpperCase();
-    this.broadcastLog(`[FibbageServer] normalizeAnswerCase: "${text}" -> "${normalized}"`);
-    return normalized;
+    // Convert to uppercase
+    const upper = text.trim().toUpperCase();
+    // Singularize the word (works on individual words)
+    const singular = this.singularize(upper.toLowerCase()).toUpperCase();
+    this.broadcastLog(`[FibbageServer] normalizeAnswerCase: "${text}" -> "${singular}"`);
+    return singular;
   }
 
   // Broadcast state to all connected clients
