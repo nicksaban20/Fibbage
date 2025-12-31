@@ -251,7 +251,12 @@ REQUIREMENTS:
   - **RULE:** The blank should feel IMPOSSIBLE to guess without knowing the specific obscure fact.
   - Eliminate "Context Clues" (venue, container type, material, action verbs that imply the object) immediately before the blank.
   - If the answer is "Milk", DO NOT say "drank", "cow", or "white". Say "liquid", "substance", or just "_____".
-
+  
+- **AVOID TAUTOLOGIES & REPETITIVE DEFINITIONS:**
+  - BAD: "The brightest star, Sirius, is a binary system with a companion dead _____." (Answer: Star) -> "Star" is seemingly obvious from "Sirius/Binary System".
+  - BAD: "The Great Wall of China is built primarily of _____." (Answer: Stone) -> Too generic.
+  - GOOD: "The Great Wall of China is held together by sticky _____." (Answer: Rice) -> Unexpected ingredient.
+  - **Rule:** The answer must NOT be a generic category word that describes the subject. AVOID answers that are simple synonyms of the subject.
 - **CRITICAL:** DO NOT USE ANY EXAMPLES FROM THIS PROMPT AS YOUR OUTPUT. YOU MUST GENERATE A NEW, UNIQUE QUESTION.
 
 - **AVOID PREDICTABLE CAUSE & Effect:** The answer must NOT be the purely logical conclusion of the sentence.
