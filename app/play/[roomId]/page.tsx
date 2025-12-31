@@ -26,7 +26,7 @@ export default function PlayerPage() {
     submitVote,
     submitQuiplashAnswers,
     submitQuiplashVote,
-    nextMatchup,
+    // nextMatchup will be used for host controls later
   } = usePartySocket({
     roomId,
     onError: setError,
@@ -114,7 +114,8 @@ export default function PlayerPage() {
     if (isAnswered || isSubmitting) return;
 
     const answers = Object.entries(quiplashAnswers)
-      .filter(([_, answer]) => answer.trim())
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .filter(([_promptId, answer]) => answer.trim())
       .map(([promptId, answer]) => ({ promptId, answer: answer.trim() }));
 
     if (answers.length === 0) {
@@ -519,7 +520,7 @@ export default function PlayerPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', flex: 1 }}>
-                {currentMatchup.answers.map((answer, index) => {
+                {currentMatchup.answers.map((answer) => {
                   const voteCount = answer.votes.length;
                   const totalVotes = currentMatchup.answers.reduce((sum, a) => sum + a.votes.length, 0);
                   const votePercent = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
