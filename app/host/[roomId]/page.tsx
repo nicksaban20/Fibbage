@@ -16,7 +16,7 @@ export default function HostPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQr, setShowQr] = useState(false);
 
-  const { isConnected, gameState, join, startGame, nextRound, playAgain, kickPlayer, skipTimer } = usePartySocket({
+  const { isConnected, gameState, join, startGame, nextRound, playAgain, kickPlayer, skipTimer, nextMatchup } = usePartySocket({
     roomId,
     onError: setError,
     onTimeUpdate: setTimeRemaining,
@@ -53,6 +53,12 @@ export default function HostPage() {
     if (isProcessing) return;
     setIsProcessing(true);
     playAgain();
+  };
+
+  const handleNextMatchup = () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    nextMatchup();
   };
 
   // Reset processing state when phase changes
@@ -93,7 +99,7 @@ export default function HostPage() {
           FIBBAGE AI
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
-          {gameState.phase !== 'lobby' && gameState.phase !== 'game-over' && gameState.phase !== 'question' && (
+          {gameState.phase !== 'lobby' && gameState.phase !== 'game-over' && (
             <div className={getTimerClass()}>{timeRemaining}</div>
           )}
           <div style={{ textAlign: 'right' }}>
@@ -512,9 +518,189 @@ export default function HostPage() {
                 </div>
               ))}
             </div>
+
+            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
+              <button
+                onClick={skipTimer}
+                className="btn-secondary"
+                style={{
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.9rem',
+                  background: 'rgba(255, 255, 255, 0.1)'
+                }}
+                title="End timer immediately"
+              >
+                Skip Timer ⏭
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* QUIPLASH ANSWERING PHASE */}
+      {gameState.phase === 'quiplash-answering' && (
+        <div className="animate-fade-in">
+          <div className="card-glass" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', padding: 'var(--spacing-2xl)' }}>
+            <h2 style={{ fontSize: '3rem', marginBottom: 'var(--spacing-lg)' }}>
+              💬 Quiplash!
+            </h2>
+            <p style={{ fontSize: '1.5rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)' }}>
+              Look at your device and answer the prompts!
+            </p>
+
+            <div style={{ marginTop: 'var(--spacing-xl)', display: 'flex', justifyContent: 'center', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
+              {gameState.players.filter(p => !p.isHost).map((player) => (
+                <div
+                  key={player.id}
+                  className="player-chip"
+                  style={{
+                    background: player.hasSubmittedAnswer ? 'var(--color-success)' : 'var(--color-bg-elevated)',
+                    opacity: player.hasSubmittedAnswer ? 1 : 0.6,
+                    transform: player.hasSubmittedAnswer ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    boxShadow: player.hasSubmittedAnswer ? '0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  <span className="player-avatar" style={{ width: '30px', height: '30px' }}>{player.name.charAt(0).toUpperCase()}</span>
+                  {player.name}
+                  {player.hasSubmittedAnswer && <span style={{ marginLeft: '5px' }}>✓</span>}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
+              <button
+                onClick={skipTimer}
+                className="btn-secondary"
+                style={{
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.9rem',
+                  background: 'rgba(255, 255, 255, 0.1)'
+                }}
+                title="End timer immediately"
+              >
+                Skip Timer ⏭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUIPLASH VOTING & RESULTS */}
+      {(gameState.phase === 'quiplash-voting' || gameState.phase === 'quiplash-results') && gameState.quiplashMatchups && (() => {
+        const currentMatchup = gameState.quiplashMatchups[gameState.currentMatchupIndex];
+        if (!currentMatchup) return null;
+
+        const isResults = gameState.phase === 'quiplash-results';
+
+        return (
+          <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2rem', marginBottom: 'var(--spacing-lg)', color: 'var(--color-text-muted)' }}>
+              {isResults ? 'RESULTS' : 'VOTE NOW!'}
+            </h2>
+
+            <div className="card-glass" style={{ padding: 'var(--spacing-xl)', marginBottom: 'var(--spacing-xl)' }}>
+              <p style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.3 }}>
+                {currentMatchup.prompt.text}
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-xl)' }}>
+              {currentMatchup.answers.map((answer) => {
+                const totalVotes = currentMatchup.answers.reduce((sum, a) => sum + a.votes.length, 0);
+                const votePercent = totalVotes > 0 ? Math.round((answer.votes.length / totalVotes) * 100) : 0;
+                const isWinner = isResults && votePercent > 50;
+                const isQuiplash = isResults && votePercent === 100 && totalVotes > 0;
+
+                return (
+                  <div
+                    key={answer.playerId}
+                    className={`card-glass ${isWinner ? 'correct' : ''}`}
+                    style={{
+                      padding: 'var(--spacing-xl)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      minHeight: '300px',
+                      transform: isWinner ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.5s ease-out',
+                      border: isWinner ? '3px solid var(--color-success)' : isQuiplash ? '3px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {isResults && (
+                      <>
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: `${votePercent}%`,
+                          background: isQuiplash ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.1)',
+                          transition: 'height 1s ease-out',
+                          pointerEvents: 'none'
+                        }} />
+                        <div style={{
+                          fontSize: '3rem',
+                          fontWeight: 800,
+                          marginBottom: 'var(--spacing-md)',
+                          color: isQuiplash ? 'var(--color-primary-light)' : 'white'
+                        }}>
+                          {votePercent}%
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ fontSize: '2rem', fontWeight: 600, position: 'relative', zIndex: 1, wordBreak: 'break-word' }}>
+                      {answer.text}
+                    </div>
+
+                    {isResults && (
+                      <div style={{ marginTop: 'var(--spacing-lg)', fontSize: '1.2rem', color: 'var(--color-text-muted)' }}>
+                        {answer.playerName}
+                        {isQuiplash && <div style={{ color: 'var(--color-primary-light)', fontWeight: 800, marginTop: 'var(--spacing-sm)' }}>QUIPLASH!</div>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {isResults && (
+              <div style={{ marginTop: 'var(--spacing-xl)' }}>
+                <button
+                  onClick={handleNextMatchup}
+                  className="btn btn-primary btn-large animate-glow"
+                  disabled={isProcessing}
+                  style={{ fontSize: '1.5rem', padding: '1rem 3rem' }}
+                >
+                  {isProcessing ? 'LOADING...' : 'Next Matchup ⏭'}
+                </button>
+              </div>
+            )}
+
+            {!isResults && (
+              <div style={{ marginTop: 'var(--spacing-xl)' }}>
+                <button
+                  onClick={skipTimer}
+                  className="btn-secondary"
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.9rem',
+                    background: 'rgba(255, 255, 255, 0.1)'
+                  }}
+                  title="End timer immediately"
+                >
+                  Skip Timer ⏭
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* VOTING PHASE */}
       {gameState.phase === 'voting' && gameState.currentQuestion && (
