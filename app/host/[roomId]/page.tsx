@@ -518,7 +518,16 @@ export default function HostPage() {
                     ) : answer.isAI ? (
                       <span style={{ color: 'var(--color-accent)' }}>🤖 AI Deception</span>
                     ) : (
-                      <span>Written by {authorPlayer?.name || 'Unknown'}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {answer.playerIds.map(pid => {
+                          const p = gameState.players.find(pl => pl.id === pid);
+                          return p ? (
+                            <span key={pid} className="player-chip small" style={{ fontSize: '0.8rem', padding: '2px 8px' }}>
+                              {p.name}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
                     )}
                   </div>
                   <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>{answer.text}</div>
