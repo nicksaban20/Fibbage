@@ -126,6 +126,9 @@ export default class FibbageServer implements Party.Server {
         case "leave":
           this.handleLeave(sender);
           break;
+        case "kick-player":
+          this.handleKickPlayer(sender, data.playerId);
+          break;
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -402,9 +405,10 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all ONLINE players (except host) have submitted
-    const onlinePlayers = this.state.players.filter(p => !p.isHost && p.isOnline);
-    if (onlinePlayers.length > 0 && onlinePlayers.every((p) => p.hasSubmittedAnswer)) {
+    // Check if ALL players (including offline) have submitted
+    // This prevents premature round ending if someone disconnects temporarily
+    const allPlayers = this.state.players.filter(p => !p.isHost);
+    if (allPlayers.length > 0 && allPlayers.every((p) => p.hasSubmittedAnswer)) {
       this.stopTimer();
       this.endAnsweringPhase();
     }
@@ -462,7 +466,7 @@ export default class FibbageServer implements Party.Server {
             answers.push({
               id: generateId(),
               text: normalizedAI,
-              playerId: null,
+              playerIds: [], // AI has no player ID
               isCorrect: false,
               isAI: true,
               votes: [],
@@ -474,12 +478,11 @@ export default class FibbageServer implements Party.Server {
       });
 
       // Add fallback if no AI answers were generated
-      // Add fallback if no AI answers were generated
       if (!answers.some(a => a.isAI)) {
         answers.push({
           id: generateId(),
           text: this.normalizeAnswerCase("Unknown"),
-          playerId: null,
+          playerIds: [],
           isCorrect: false,
           isAI: true,
           votes: [],
@@ -493,7 +496,7 @@ export default class FibbageServer implements Party.Server {
     answers.push({
       id: generateId(),
       text: this.normalizeAnswerCase(this.state.currentQuestion.correctAnswer),
-      playerId: null,
+      playerIds: [],
       isCorrect: true,
       isAI: false,
       votes: [],
@@ -557,9 +560,9 @@ export default class FibbageServer implements Party.Server {
 
     this.broadcastState();
 
-    // Check if all ONLINE players (except host) have voted
-    const onlinePlayers = this.state.players.filter(p => !p.isHost && p.isOnline);
-    if (onlinePlayers.length > 0 && onlinePlayers.every((p) => p.hasVoted)) {
+    // Check if ALL players (including offline) have voted
+    const allPlayers = this.state.players.filter(p => !p.isHost);
+    if (allPlayers.length > 0 && allPlayers.every((p) => p.hasVoted)) {
       this.stopTimer();
       this.endVotingPhase();
     }
@@ -693,6 +696,41 @@ export default class FibbageServer implements Party.Server {
     const leftMessage: ServerMessage = { type: "player-left", playerId: conn.id };
     this.room.broadcast(JSON.stringify(leftMessage));
     this.broadcastState();
+  }
+
+  // Handle kicking a player
+  handleKickPlayer(sender: Party.Connection, targetPlayerId: string) {
+    const senderPlayer = this.state.players.find((p) => p.id === sender.id);
+    if (!senderPlayer?.isHost) {
+      this.sendError(sender, "Only the host can kick players");
+      return;
+    }
+
+    if (senderPlayer.id === targetPlayerId) {
+      this.sendError(sender, "Cannot kick yourself");
+      return;
+    }
+
+    const targetPlayer = this.state.players.find((p) => p.id === targetPlayerId);
+    if (!targetPlayer) {
+      this.sendError(sender, "Player not found");
+      return;
+    }
+
+    // Remove from state
+    this.state.players = this.state.players.filter((p) => p.id !== targetPlayerId);
+
+    // Notify everyone
+    const leftMessage: ServerMessage = { type: "player-left", playerId: targetPlayerId };
+    this.room.broadcast(JSON.stringify(leftMessage));
+    this.broadcastState();
+
+    // Close connection HARD
+    const targetConn = this.room.getConnection(targetPlayerId);
+    if (targetConn) {
+      this.sendError(targetConn, "You have been kicked by the host.");
+      targetConn.close();
+    }
   }
 
   // Timer utilities

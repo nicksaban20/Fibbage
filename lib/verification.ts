@@ -1,4 +1,3 @@
-import { generateFakeAnswer } from './claude'; // Reuse client getter? No, circular.
 import Anthropic from '@anthropic-ai/sdk';
 
 // Re-implement getClient locally to avoid circular deps or move to shared utils
@@ -110,7 +109,7 @@ INSTRUCTIONS:
             const result = JSON.parse(textBlock.text.trim());
             console.log(`[Verification] Result: ${result.verified} (${result.reason})`);
             return result;
-        } catch (e) {
+        } catch {
             console.error('[Verification] Failed to parse JSON:', textBlock.text);
             // Fallback: check if text contains "true"
             const lower = textBlock.text.toLowerCase();

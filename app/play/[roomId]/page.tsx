@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { usePartySocket } from '@/lib/usePartySocket';
-import type { Player, Answer } from '@/lib/game-types';
 
 export default function PlayerPage() {
   const params = useParams();
@@ -258,9 +257,18 @@ export default function PlayerPage() {
                 <label className="label" style={{ fontSize: '1rem', color: 'var(--color-primary-light)' }}>CRAFT YOUR LIE</label>
                 <textarea
                   className="input"
-                  placeholder="Make it sound true..."
+                  placeholder="One word only..."
                   value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  onChange={(e) => {
+                    // Force input to be single word (remove spaces)
+                    const val = e.target.value.replace(/\s/g, '');
+                    setAnswer(val);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ') {
+                      e.preventDefault();
+                    }
+                  }}
                   maxLength={100}
                   style={{
                     height: '150px',
@@ -302,7 +310,7 @@ export default function PlayerPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', paddingBottom: '2rem' }}>
               {gameState.answers
-                .filter(a => a.playerId !== currentPlayer.id) // Can't vote for own answer
+                .filter(a => !a.playerIds.includes(currentPlayer.id)) // Can't vote for own answer
                 .map((answer, index) => (
                   <button
                     key={answer.id}

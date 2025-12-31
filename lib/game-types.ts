@@ -25,7 +25,7 @@ export interface Player {
 export interface Answer {
   id: string;
   text: string;
-  playerId: string | null; // null for AI or correct answer
+  playerIds: string[]; // List of players who submitted this answer (empty for AI/Correct)
   isCorrect: boolean;
   isAI: boolean;
   votes: string[]; // Player IDs who voted for this
@@ -83,7 +83,8 @@ export type ClientMessage =
   | { type: 'submit-vote'; answerId: string }
   | { type: 'next-round' }
   | { type: 'play-again' }
-  | { type: 'leave' };
+  | { type: 'leave' }
+  | { type: 'kick-player'; playerId: string };
 
 export type ServerMessage =
   | { type: 'state-update'; state: GameState }
@@ -106,7 +107,7 @@ export const DEFAULT_CONFIG: GameConfig = {
 
 // Scoring constants
 export const SCORING = {
-  CORRECT_GUESS: 500,
+  CORRECT_GUESS: 1000,
   FOOL_PLAYER: 1000,
   AI_VOTE: 0 // No penalty for voting for AI
 };

@@ -41,6 +41,27 @@ export async function validatePlayerAnswer(
     }
 
     // All checks passed
+
+    // Final deep check: Semantic Similarity (LLM)
+    // Only verify if we have an API key and it's not an exact match
+    if (process.env.ANTHROPIC_API_KEY) {
+        try {
+            // Import dynamically or assume it's available since we are server-side
+            const { checkSemanticSimilarity } = await import('./claude');
+            const isSemanticMatch = await checkSemanticSimilarity(answer, correctAnswer);
+
+            if (isSemanticMatch) {
+                return {
+                    isValid: false,
+                    reason: 'That implies the same thing as the correct answer! Be tricky!',
+                    confidence: 'high'
+                };
+            }
+        } catch (e) {
+            console.warn('Semantic check failed, allowing answer:', e);
+        }
+    }
+
     return {
         isValid: true,
         reason: 'Answer accepted',

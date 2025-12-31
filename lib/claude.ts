@@ -128,7 +128,7 @@ Reply with just the one-word fake answer:`
 
     const textBlock = message.content.find(block => block.type === 'text');
     if (textBlock && textBlock.type === 'text') {
-      let answer = textBlock.text.trim().replace(/^[\"']|[\"']$/g, '');
+      const answer = textBlock.text.trim().replace(/^[\"']|[\"']$/g, '');
       if (answer.length > 0 && answer.length <= 100) {
         return answer;
       }
@@ -160,9 +160,48 @@ export async function generateTriviaQuestion(
       const now = new Date();
       const timeSeed = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
 
-      // Random general category for metadata (not used in prompt)
-      const categories = ['General', 'Weird Facts', 'History', 'Science', 'Nature', 'Human Behavior'];
+      // Random category for variety - re-enabled to prevent topic stagnation
+      // Random category for variety - massively expanded list
+      const categories = [
+        // Science & Nature
+        'Quantum Physics', 'Astronomy', 'Rare Animals', 'Botany', 'Geology',
+        'Medical Oddities', 'Chemistry', 'Oceanography', 'Entomology (Insects)',
+        'Mycology (Fungi)', 'Paleontology', 'Meteorology',
+
+        // History
+        'Ancient Egypt', 'The Middle Ages', 'The Victorian Era', 'World War II',
+        'The Cold War', 'Ancient Rome', 'The Wild West', 'Pirates', 'The 1920s',
+        'Industrial Revolution', 'Feudal Japan', 'Viking History',
+
+        // Geography & Places
+        'Remote Islands', 'Ghost Towns', 'National Parks', 'Capital Cities',
+        'Weird Landmarks', 'Micronations', 'Caves & Underground', 'Antarctica',
+
+        // Culture & Weirdness
+        'Urban Legends', 'Superstitions', 'Secret Societies', 'Crimes',
+        'Unusual Laws', 'Hoaxes', 'Cryptids', 'Phobias', 'Guinness World Records',
+        'Nobel Prizes', 'Darwin Awards',
+
+        // Entertainment & Pop Culture
+        'Early Cinema', '90s Cartoons', 'Classic Rock', 'Reality TV',
+        'Video Game History', 'Board Games', 'Internet Memes', 'Horror Movies',
+        'Sitcoms', 'One-Hit Wonders', 'Celebrity Scandals',
+
+        // Food
+        'Bizarre Foods', 'Regional Delicacies', 'Fast Food History', 'Candy',
+        'Coffee & Tea', 'Alcohol History',
+
+        // Miscellaneous
+        'Inventions', 'Fashion History', 'Toys', 'The Olympics', 'Language Origins',
+        'Corporate Failures', 'Spies & Espionage'
+      ];
       const randomCategoryLabel = categories[Math.floor(Math.random() * categories.length)];
+      // Also pick a style to bias the generation further away from generic history
+      const styles = [
+        'obscure and little-known', 'surprising', 'funny', 'mind-blowing',
+        'historical', 'scientific', 'cultural', 'bizarre'
+      ];
+      const randomStyle = styles[Math.floor(Math.random() * styles.length)];
 
       const previousQuestionsContext = previousQuestions.length > 0
         ? `\n\nDO NOT USE THESE TOPICS (already used in this game):\n${previousQuestions.slice(-10).join('\n')}`
@@ -178,6 +217,7 @@ export async function generateTriviaQuestion(
               role: 'user',
               content: `Generate ONE unique Fibbage trivia question.
 
+TOPIC: ${randomCategoryLabel} (specifically something ${randomStyle})
 SESSION: ${timeSeed}-${Math.random().toString(36).slice(2, 6)}
 
 FIBBAGE: A party game where players see a fill-in-the-blank question and try to fool others with fake answers.
@@ -187,12 +227,12 @@ REQUIREMENTS:
 - Must be UNBELIEVABLY OBSCURE (Graduate/Archive level difficulty)
 - Facts should sound fake but be 100% true (The Fibbage Effect)
 - **QUESTION STRUCTURE:** 
-  - **MAX LENGTH:** 15-20 words. Shorter is better.
+  - **MAX LENGTH:** 10-15 words. Shorter is better.
   - **STYLE:** Punchy, direct, and concise. No fluff.
   - **RULE:** If you can remove a word without changing the fact, REMOVE IT.
   - AVOID lengthy preambles. Start directly with the subject/action if possible.
-- Answer should be 1-4 words
-- Use _____ for each word in the answer (e.g., "_____ _____" for a 2-word answer)
+- Answer MUST be exactly 1 WORD.
+- Use _____ for the blank.
 - Avoid common trivia like the plague (no flamingos, no butterflies, no octopuses)
 - Be CREATIVE - surprise the players with how wild the fact is!
 - **CRITICAL: The question must be OPEN-ENDED.** It must be possible to imagine 50 different plausible fake answers.
@@ -205,17 +245,25 @@ REQUIREMENTS:
 - **AMBIGUITY REQUIREMENT:** Do NOT include descriptive words that give away the answer category.
   - BAD: "Smugglers would hide contraband in hollowed-out loaves of _____." (Answer: Bread) -> "Loaves" reveals it's bread.
   - GOOD: "Smugglers would hide contraband in hollowed-out _____." (Answer: Bread) -> Could be anything (Logs? Books? Shoes?).
-  - BAD: "The Louvre museum has a painting of a _____." (Answer: Smile) -> "Museum/Painting" implies Art.
-  - GOOD: "The Louvre contains 5000 instances of _____." (Answer: Smile) -> Could be anything.
+  - BAD: "In 1814, a London brewery explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> "Brewery" implies Alcohol/Beer.
+  - GOOD: "In 1814, a London explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> Now it could be anything (Molasses? Sewage? Gin?).
   - Keep the blank OPEN-ENDED. Eliminate "Context Clues" (venue, container type) immediately before the blank.
 
 - **CRITICAL:** DO NOT USE ANY EXAMPLES FROM THIS PROMPT AS YOUR OUTPUT. YOU MUST GENERATE A NEW, UNIQUE QUESTION.
 
-- **AVOID PREDICTABLE CAUSE & EFFECT:** The answer must NOT be the purely logical conclusion of the sentence.
-  - BAD: "Invented to monitor a coffee pot because people were tired of finding it _____." (Answer: Empty) -> Logic dictates "Empty".
+- **AVOID PREDICTABLE CAUSE & Effect:** The answer must NOT be the purely logical conclusion of the sentence.
+  - BAD: "The first webcam was invented to monitor a _____." (Answer: Pot) -> Logic dictates "Pot" (from context of coffee).
+  - GOOD: "The first webcam was pointed at a coffee pot to check for _____." (Answer: Mold) -> Unexpected 1-word answer.
   - GOOD: "The first webcam was invented to monitor a _____." (Answer: Coffee Pot) -> A bit more open, though still tech history.
   - BETTER: "The first webcam was used to monitor a coffee pot, specifically checking for _____." (Answer: Mold/Poison/Aliens) -> (If true).
   - Rule: If the sentence setup makes the answer obvious to a sensible person, IT IS A BAD QUESTION.
+  
+- **AVOID OBVIOUS ANATOMY & BIOLOGY:**
+  - BAD: "Patients with usually Foreign Accent Syndrome speak differently after damage to their _____." (Answer: Brain) -> Obvious medical fact.
+  - BAD: "The largest organ in the human body is the _____." (Answer: Skin) -> Common knowledge.
+  - GOOD: "Phineas Gage survived an iron rod driven through his _____." (Answer: Head) -> Still famous, maybe too easy, but better context.
+  - BETTER: "Ancient Egyptians removed the brain through the _____." (Answer: Nose) -> The "Nose" is the unexpected part.
+  - **Rule:** If the blank is a major organ (Brain, Heart, Liver), the question is usually boring. AVOID IT unless the mechanism is bizarre.
 
 ANSWER QUALITY (CRITICAL):
 - **LENGTH PREFERENCE:**
@@ -406,4 +454,45 @@ function levenshteinDistance(a: string, b: string): number {
   }
 
   return matrix[b.length][a.length];
+}
+
+// Check if two answers are semantically identical using LLM (slower but deeper)
+export async function checkSemanticSimilarity(answer1: string, answer2: string, apiKey?: string): Promise<boolean> {
+  try {
+    const client = getClient(apiKey);
+
+    // Quick heuristic: checks for plural/singular differences
+    const a1 = answer1.toLowerCase().trim();
+    const a2 = answer2.toLowerCase().trim();
+    if (a1 === a2 + 's' || a2 === a1 + 's') return true;
+    if (a1 === a2 + 'es' || a2 === a1 + 'es') return true;
+
+    // Use Haiku for speed
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 10,
+      messages: [
+        {
+          role: 'user',
+          content: `Are these two words effectively synonyms in a trivia game context?
+A: "${answer1}"
+B: "${answer2}"
+
+Reply ONLY "YES" or "NO". (Example: "Corpses" vs "Bodies" -> YES. "Cat" vs "Dog" -> NO).`
+        }
+      ]
+    });
+
+    const textBlock = response.content.find(block => block.type === 'text');
+    if (textBlock && textBlock.type === 'text') {
+      const result = textBlock.text.trim().toUpperCase();
+      return result.includes('YES');
+    }
+
+    return false;
+  } catch (error) {
+    console.error('[Claude] Error checking semantic similarity:', error);
+    // Fail safe: assume not similar if error, to avoid blocking game
+    return false;
+  }
 }

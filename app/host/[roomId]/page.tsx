@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { usePartySocket } from '@/lib/usePartySocket';
-import type { GameConfig, Player, Answer } from '@/lib/game-types';
+import type { GameConfig } from '@/lib/game-types';
 import { DEFAULT_CONFIG, SCORING } from '@/lib/game-types';
 
 export default function HostPage() {
@@ -16,7 +16,7 @@ export default function HostPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQr, setShowQr] = useState(false);
 
-  const { isConnected, gameState, join, startGame, nextRound, playAgain } = usePartySocket({
+  const { isConnected, gameState, join, startGame, nextRound, playAgain, kickPlayer } = usePartySocket({
     roomId,
     onError: setError,
     onTimeUpdate: setTimeRemaining,
@@ -213,6 +213,33 @@ export default function HostPage() {
                       <span className="player-avatar" style={{ background: player.isOnline ? undefined : 'gray' }}>{player.name.charAt(0).toUpperCase()}</span>
                       {player.name}
                       {!player.isOnline && <span style={{ fontSize: '0.7em', marginLeft: '0.5em', fontStyle: 'italic' }}>(Offline)</span>}
+                      {/* Kick Button (Host Only) */}
+                      {gameState.players.find(p => p.isHost && p.isOnline)?.id === gameState.players.find(p => p.isHost && p.isOnline)?.id && (
+                        // Logic check: Am I the host? The UI is for the HOST only (HostPage). 
+                        // HostPage is ALWAYS the host view (or at least intended).
+                        // But wait, `HostPage` joins as "Host".
+                        // So yes, this UI is for the host. I can just render the button.
+                        <button
+                          onClick={() => {
+                            if (confirm(`Kick ${player.name}?`)) {
+                              kickPlayer(player.id);
+                            }
+                          }}
+                          style={{
+                            marginLeft: 'auto',
+                            background: 'rgba(255, 0, 0, 0.2)',
+                            border: '1px solid rgba(255, 0, 0, 0.5)',
+                            color: '#ff4444',
+                            borderRadius: '4px',
+                            padding: '2px 6px',
+                            fontSize: '0.7rem',
+                            cursor: 'pointer'
+                          }}
+                          title="Kick player"
+                        >
+                          X
+                        </button>
+                      )}
                     </li>
                   ))
                 )}
@@ -250,7 +277,7 @@ export default function HostPage() {
                     onChange={(e) => setConfig({ ...config, answerTimeSeconds: parseInt(e.target.value) })}
                     style={{ cursor: 'pointer' }}
                   >
-                    {[30, 45, 60, 90, 120].map(n => (
+                    {[15, 30, 45, 60, 90, 120, 180].map(n => (
                       <option key={n} value={n}>{n}s</option>
                     ))}
                   </select>
@@ -263,7 +290,7 @@ export default function HostPage() {
                     onChange={(e) => setConfig({ ...config, votingTimeSeconds: parseInt(e.target.value) })}
                     style={{ cursor: 'pointer' }}
                   >
-                    {[30, 45, 60, 90].map(n => (
+                    {[15, 30, 45, 60, 90, 120].map(n => (
                       <option key={n} value={n}>{n}s</option>
                     ))}
                   </select>
@@ -459,8 +486,7 @@ export default function HostPage() {
           </div>
 
           <div className="answer-grid" style={{ maxWidth: '1200px', margin: '0 auto var(--spacing-xl)' }}>
-            {gameState.answers.map((answer, index) => {
-              const authorPlayer = gameState.players.find(p => p.id === answer.playerId);
+            {gameState.answers.map((answer) => {
               return (
                 <div
                   key={answer.id}
@@ -468,7 +494,10 @@ export default function HostPage() {
                   style={{
                     cursor: 'default',
                     opacity: answer.isCorrect ? 1 : 0.8,
-                    transform: answer.isCorrect ? 'scale(1.02)' : 'scale(1)'
+                    transform: answer.isCorrect ? 'scale(1.05)' : 'scale(1)',
+                    boxShadow: answer.isCorrect ? '0 0 30px rgba(34, 197, 94, 0.6)' : 'none',
+                    border: answer.isCorrect ? '2px solid #22c55e' : '1px solid transparent',
+                    background: answer.isCorrect ? 'rgba(34, 197, 94, 0.2)' : undefined
                   }}
                 >
                   {answer.votes.length > 0 && (

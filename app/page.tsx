@@ -150,7 +150,7 @@ export default function HomePage() {
           <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>❓</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--spacing-xs)' }}>Get a Question</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>You'll get an obscure trivia fact with a missing word.</p>
+            <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>You&apos;ll get an obscure trivia fact with a missing word.</p>
           </div>
           <div className="card-glass" style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 'var(--spacing-lg)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-sm)' }}>✍️</div>

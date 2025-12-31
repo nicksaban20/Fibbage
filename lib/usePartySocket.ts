@@ -154,6 +154,11 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     sendMessage({ type: 'leave' });
   }, [sendMessage]);
 
+  const kickPlayer = useCallback((playerId: string) => {
+    log(`👢 Kicking player: ${playerId}`);
+    sendMessage({ type: 'kick-player', playerId });
+  }, [sendMessage]);
+
   return {
     isConnected,
     gameState,
@@ -164,6 +169,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     nextRound,
     playAgain,
     leave,
+    kickPlayer,
   };
 }
 
