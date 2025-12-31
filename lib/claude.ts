@@ -57,12 +57,13 @@ CATEGORY: ${question.category}
 REAL ANSWER (do NOT use this): "${question.correctAnswer}"
 
 Rules:
-- MUST BE ONE WORD ONLY (No exceptions)
-- Sounds plausible but is WRONG
-- NO quotes, NO explanation, just the output
-- If the blank allows "a ____", return just the noun (e.g. "Toaster", not "a toaster")
+- Respond with ONE OR TWO WORDS only
+- Must sound plausible but be WRONG
+- NO quotes, NO explanation, just the answer
+- NEVER say "unknown", "unsure", "unclear", or similar
+- If the blank is "a ____", return just the noun (e.g. "Toaster" not "a toaster")
 
-Fake answer (1 word):`
+Fake answer:`
           }
         ]
       });
@@ -79,13 +80,21 @@ Fake answer (1 word):`
     // Clean up the response
     let fakeAnswer = textBlock.text.trim();
     // Remove quotes if present
-    fakeAnswer = fakeAnswer.replace(/^[\"']|[\"']$/g, '');
+    fakeAnswer = fakeAnswer.replace(/^["']|["']$/g, '');
     // Remove any leading phrases
     fakeAnswer = fakeAnswer.replace(/^(The answer is|I would say|How about|Maybe|Perhaps|Fake answer:?)[:\s]*/i, '');
     // Limit length
-    fakeAnswer = fakeAnswer.substring(0, 100);
+    fakeAnswer = fakeAnswer.substring(0, 100).trim();
 
     console.log(`[Claude] Generated fake answer: "${fakeAnswer}" for question: "${question.text.slice(0, 50)}..."`);
+
+    // Reject "unknown" type answers
+    const lowerAnswer = fakeAnswer.toLowerCase();
+    if (lowerAnswer.includes('unknown') || lowerAnswer.includes('unsure') ||
+      lowerAnswer.includes('unclear') || lowerAnswer === '' || fakeAnswer.length < 2) {
+      console.warn(`[Claude] Rejected generic answer: "${fakeAnswer}", using fallback`);
+      return generateFallbackFakeAnswer(question);
+    }
 
     // Validate the AI answer to ensure it's not too similar to correct answer
     const validation = validateAIAnswer(fakeAnswer, question);
@@ -432,13 +441,13 @@ ANSWER: [1 word answer]`
 // Fallback fake answer generator
 function generateFallbackFakeAnswer(question: Question): string {
   const fallbacks: Record<string, string[]> = {
-    'Science': ['Quantum fluctuation', 'Molecular resonance', 'Thermal dynamics', 'Photosynthetic reaction'],
-    'History': ['King George III', 'The Romans', 'Ancient Egypt', 'The Ming Dynasty'],
-    'Geography': ['The Amazon', 'Mount Kilimanjaro', 'The Sahara', 'Greenland'],
-    'Entertainment': ['Steven Spielberg', 'The Beatles', 'Hollywood Studios', 'MGM Studios'],
-    'Sports': ['The Olympics', 'World Cup 1966', 'Jesse Owens', 'Babe Ruth'],
-    'Art': ['Leonardo da Vinci', 'The Renaissance', 'Impressionism', 'Van Gogh'],
-    'default': ['Unknown origin', 'Ancient times', 'Scientists disagree', 'Lost to history']
+    'Science': ['Quantum flux', 'Photons', 'Nitrogen', 'Plasma'],
+    'History': ['Napoleon', 'The Romans', 'Vikings', 'Egyptians'],
+    'Geography': ['Brazil', 'Siberia', 'The Alps', 'Madagascar'],
+    'Entertainment': ['Spielberg', 'Disney', 'Warner Bros', 'Broadway'],
+    'Sports': ['The Olympics', 'World Cup', 'Wimbledon', 'Super Bowl'],
+    'Art': ['Da Vinci', 'Picasso', 'Monet', 'Michelangelo'],
+    'default': ['Cosmic rays', 'Electricity', 'The French', 'Gold']
   };
 
   const category = Object.keys(fallbacks).find(cat =>
