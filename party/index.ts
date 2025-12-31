@@ -9,6 +9,8 @@ import type {
   ServerMessage,
   GameConfig,
   RoundResult,
+  QuiplashPrompt,
+  QuiplashMatchup,
 } from "../lib/game-types";
 import { DEFAULT_CONFIG, SCORING } from "../lib/game-types";
 import { fetchTriviaQuestions, fetchSingleQuestion, getFallbackQuestions } from "../lib/trivia";
@@ -19,6 +21,7 @@ import {
   shuffleArray,
 } from "../lib/fuzzy-match";
 import { validatePlayerAnswer } from "../lib/validation";
+import { getQuiplashPrompts } from "../lib/quiplash-prompts";
 
 // Initial game state factory
 function createInitialState(roomCode: string): GameState {
@@ -30,6 +33,8 @@ function createInitialState(roomCode: string): GameState {
     currentRound: 0,
     currentQuestion: null,
     answers: [],
+    quiplashMatchups: [],
+    currentMatchupIndex: 0,
     timeRemaining: 0,
     roundResults: [],
   };
@@ -42,6 +47,7 @@ export default class FibbageServer implements Party.Server {
   questions: Question[] = [];
   timer: ReturnType<typeof setInterval> | null = null;
   nextQuestionPromise: Promise<Question> | null = null; // Background pre-fetch
+  usedQuiplashPromptIds: Set<string> = new Set(); // Track used prompts
 
   constructor(readonly room: Party.Room) {
     // Generate room code from room ID or create new one
@@ -182,6 +188,16 @@ export default class FibbageServer implements Party.Server {
         case "skip-timer":
           this.handleSkipTimer(sender);
           break;
+        // Quiplash-specific handlers
+        case "submit-quiplash-answers":
+          this.handleSubmitQuiplashAnswers(sender, data.answers);
+          break;
+        case "submit-quiplash-vote":
+          this.handleSubmitQuiplashVote(sender, data.matchupId, data.votedPlayerId);
+          break;
+        case "next-matchup":
+          this.handleNextMatchup(sender);
+          break;
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -299,14 +315,26 @@ export default class FibbageServer implements Party.Server {
 
     // Apply config
     this.state.config = {
+      gameMode: config.gameMode || 'fibbage',
       totalRounds: Math.min(Math.max(config.totalRounds, 1), 15),
       answerTimeSeconds: Math.min(Math.max(config.answerTimeSeconds, 15), 180),
       votingTimeSeconds: Math.min(Math.max(config.votingTimeSeconds, 15), 120),
       aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
       verifyAnswers: config.verifyAnswers ?? false,
       model: config.model || 'claude-haiku-4-5-20251001',
-      useFallbackOnly: config.useFallbackOnly ?? false, // Add missing field
+      useFallbackOnly: config.useFallbackOnly ?? false,
     };
+
+    // Branch based on game mode
+    if (this.state.config.gameMode === 'quiplash') {
+      await this.startQuiplashGame();
+    } else {
+      await this.startFibbageGame();
+    }
+  }
+
+  // Start Fibbage game mode
+  async startFibbageGame() {
 
     // Show loading phase while fetching first question
     this.state.phase = "loading";
@@ -885,4 +913,286 @@ export default class FibbageServer implements Party.Server {
       this.timer = null;
     }
   }
+
+  // ========== QUIPLASH GAME MODE ==========
+
+  async startQuiplashGame() {
+    this.broadcastLog('[Quiplash] Starting Quiplash game!');
+    this.usedQuiplashPromptIds.clear();
+    await this.startQuiplashRound();
+  }
+
+  async startQuiplashRound() {
+    this.state.currentRound++;
+    this.state.quiplashMatchups = [];
+    this.state.currentMatchupIndex = 0;
+
+    // Reset player states
+    this.state.players.forEach((p) => {
+      p.hasSubmittedAnswer = false;
+      p.hasVoted = false;
+      p.quiplashPrompts = [];
+      p.quiplashAnswers = [];
+    });
+
+    // Assign prompts - each player gets 2 prompts, each prompt goes to 2 players
+    this.assignQuiplashPrompts();
+
+    // Start answering phase
+    this.state.phase = 'quiplash-answering';
+    this.broadcastState();
+
+    // Start timer
+    this.startTimer(() => this.endQuiplashAnswering(), this.state.config.answerTimeSeconds);
+  }
+
+  assignQuiplashPrompts() {
+    const players = this.state.players.filter(p => !p.isHost);
+    const allPrompts = getQuiplashPrompts();
+
+    // Filter out used prompts
+    const availablePrompts = allPrompts.filter(p => !this.usedQuiplashPromptIds.has(p.id));
+
+    // Shuffle available prompts
+    const shuffledPrompts = shuffleArray([...availablePrompts]);
+
+    // Number of matchups = number of players (each player gets 2 prompts)
+    const numMatchups = players.length;
+    const selectedPrompts = shuffledPrompts.slice(0, numMatchups);
+
+    // Mark as used
+    selectedPrompts.forEach(p => this.usedQuiplashPromptIds.add(p.id));
+
+    // Assign each prompt to 2 players (round-robin style)
+    const shuffledPlayers = shuffleArray([...players]);
+
+    selectedPrompts.forEach((prompt, index) => {
+      // Assign to player at index and index+1 (wrapping around)
+      const player1 = shuffledPlayers[index % shuffledPlayers.length];
+      const player2 = shuffledPlayers[(index + 1) % shuffledPlayers.length];
+
+      if (!player1.quiplashPrompts) player1.quiplashPrompts = [];
+      if (!player2.quiplashPrompts) player2.quiplashPrompts = [];
+
+      player1.quiplashPrompts.push(prompt);
+      player2.quiplashPrompts.push(prompt);
+    });
+
+    this.broadcastLog(`[Quiplash] Assigned ${numMatchups} prompts to ${players.length} players`);
+  }
+
+  handleSubmitQuiplashAnswers(conn: Party.Connection, answers: { promptId: string; answer: string }[]) {
+    const player = this.state.players.find(p => p.id === conn.id);
+    if (!player || player.isHost) {
+      this.sendError(conn, "Cannot submit answers");
+      return;
+    }
+
+    if (this.state.phase !== 'quiplash-answering') {
+      this.sendError(conn, "Not in answering phase");
+      return;
+    }
+
+    // Store answers
+    player.quiplashAnswers = answers.map(a => ({
+      promptId: a.promptId,
+      answer: this.normalizeAnswerCase(a.answer)
+    }));
+    player.hasSubmittedAnswer = true;
+
+    this.broadcastLog(`[Quiplash] ${player.name} submitted ${answers.length} answers`);
+    this.broadcastState();
+
+    // Check if all players submitted
+    const nonHostPlayers = this.state.players.filter(p => !p.isHost);
+    if (nonHostPlayers.every(p => p.hasSubmittedAnswer)) {
+      this.stopTimer();
+      this.endQuiplashAnswering();
+    }
+  }
+
+  endQuiplashAnswering() {
+    this.broadcastLog('[Quiplash] Answering phase ended, creating matchups...');
+
+    // Create matchups from player answers
+    this.createQuiplashMatchups();
+
+    if (this.state.quiplashMatchups.length === 0) {
+      this.broadcastLog('[Quiplash] No matchups created, ending round');
+      this.endQuiplashRound();
+      return;
+    }
+
+    // Start voting on first matchup
+    this.state.currentMatchupIndex = 0;
+    this.state.phase = 'quiplash-voting';
+    this.broadcastState();
+
+    this.startTimer(() => this.endCurrentMatchupVoting(), this.state.config.votingTimeSeconds);
+  }
+
+  createQuiplashMatchups() {
+    const players = this.state.players.filter(p => !p.isHost);
+    const matchups: QuiplashMatchup[] = [];
+    const processedPromptIds = new Set<string>();
+
+    // For each player's prompts, create matchups
+    players.forEach(player => {
+      player.quiplashPrompts?.forEach(prompt => {
+        if (processedPromptIds.has(prompt.id)) return;
+        processedPromptIds.add(prompt.id);
+
+        // Find all answers for this prompt
+        const answers: QuiplashMatchup['answers'] = [];
+        players.forEach(p => {
+          const answer = p.quiplashAnswers?.find(a => a.promptId === prompt.id);
+          if (answer && answer.answer.trim()) {
+            answers.push({
+              playerId: p.id,
+              playerName: p.name,
+              text: answer.answer,
+              votes: []
+            });
+          }
+        });
+
+        // Only create matchup if we have 2 answers
+        if (answers.length >= 2) {
+          matchups.push({
+            id: generateId(),
+            prompt: prompt,
+            answers: shuffleArray(answers),
+            hasBeenShown: false
+          });
+        }
+      });
+    });
+
+    this.state.quiplashMatchups = shuffleArray(matchups);
+    this.broadcastLog(`[Quiplash] Created ${matchups.length} matchups`);
+  }
+
+  handleSubmitQuiplashVote(conn: Party.Connection, matchupId: string, votedPlayerId: string) {
+    const player = this.state.players.find(p => p.id === conn.id);
+    if (!player) {
+      this.sendError(conn, "Player not found");
+      return;
+    }
+
+    if (this.state.phase !== 'quiplash-voting') {
+      this.sendError(conn, "Not in voting phase");
+      return;
+    }
+
+    const matchup = this.state.quiplashMatchups[this.state.currentMatchupIndex];
+    if (!matchup || matchup.id !== matchupId) {
+      this.sendError(conn, "Invalid matchup");
+      return;
+    }
+
+    // Can't vote for own answer
+    if (matchup.answers.some(a => a.playerId === player.id)) {
+      // Player is in this matchup, can't vote
+      return;
+    }
+
+    // Remove previous vote if any
+    matchup.answers.forEach(a => {
+      a.votes = a.votes.filter(v => v !== player.id);
+    });
+
+    // Add new vote
+    const votedAnswer = matchup.answers.find(a => a.playerId === votedPlayerId);
+    if (votedAnswer) {
+      votedAnswer.votes.push(player.id);
+      player.hasVoted = true;
+      this.broadcastLog(`[Quiplash] ${player.name} voted`);
+    }
+
+    this.broadcastState();
+
+    // Check if all eligible voters have voted
+    const eligibleVoters = this.state.players.filter(p =>
+      !p.isHost && !matchup.answers.some(a => a.playerId === p.id)
+    );
+    if (eligibleVoters.length > 0 && eligibleVoters.every(p => p.hasVoted)) {
+      this.stopTimer();
+      this.endCurrentMatchupVoting();
+    }
+  }
+
+  endCurrentMatchupVoting() {
+    const matchup = this.state.quiplashMatchups[this.state.currentMatchupIndex];
+    if (matchup) {
+      matchup.hasBeenShown = true;
+      this.scoreQuiplashMatchup(matchup);
+    }
+
+    // Reset voting state for next matchup
+    this.state.players.forEach(p => p.hasVoted = false);
+
+    // Show results briefly
+    this.state.phase = 'quiplash-results';
+    this.broadcastState();
+  }
+
+  scoreQuiplashMatchup(matchup: QuiplashMatchup) {
+    const totalVotes = matchup.answers.reduce((sum, a) => sum + a.votes.length, 0);
+    if (totalVotes === 0) return;
+
+    matchup.answers.forEach(answer => {
+      const player = this.state.players.find(p => p.id === answer.playerId);
+      if (!player) return;
+
+      const votePercent = answer.votes.length / totalVotes;
+
+      if (votePercent === 1) {
+        // Quiplash! 100% of votes
+        player.score += SCORING.QUIPLASH_WIN;
+        this.broadcastLog(`[Quiplash] QUIPLASH! ${player.name} got 100% (+${SCORING.QUIPLASH_WIN})`);
+      } else if (votePercent > 0.5) {
+        // Majority
+        player.score += SCORING.QUIPLASH_MAJORITY;
+        this.broadcastLog(`[Quiplash] ${player.name} won majority (+${SCORING.QUIPLASH_MAJORITY})`);
+      } else if (votePercent === 0.5) {
+        // Split
+        player.score += SCORING.QUIPLASH_SPLIT;
+        this.broadcastLog(`[Quiplash] ${player.name} split (+${SCORING.QUIPLASH_SPLIT})`);
+      }
+    });
+  }
+
+  handleNextMatchup(conn: Party.Connection) {
+    const player = this.state.players.find(p => p.id === conn.id);
+    if (!player?.isHost) {
+      this.sendError(conn, "Only the host can advance");
+      return;
+    }
+
+    this.state.currentMatchupIndex++;
+
+    if (this.state.currentMatchupIndex >= this.state.quiplashMatchups.length) {
+      // All matchups done, end round
+      this.endQuiplashRound();
+    } else {
+      // Next matchup
+      this.state.players.forEach(p => p.hasVoted = false);
+      this.state.phase = 'quiplash-voting';
+      this.broadcastState();
+      this.startTimer(() => this.endCurrentMatchupVoting(), this.state.config.votingTimeSeconds);
+    }
+  }
+
+  endQuiplashRound() {
+    this.broadcastLog(`[Quiplash] Round ${this.state.currentRound} complete!`);
+
+    if (this.state.currentRound >= this.state.config.totalRounds) {
+      this.state.phase = 'game-over';
+    } else {
+      this.state.phase = 'results';
+    }
+
+    this.broadcastState();
+  }
 }
+

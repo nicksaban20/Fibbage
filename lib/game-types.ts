@@ -6,7 +6,14 @@ export type GamePhase =
   | 'answering'
   | 'voting'
   | 'results'
-  | 'game-over';
+  | 'game-over'
+  // Quiplash-specific phases
+  | 'quiplash-answering'
+  | 'quiplash-voting'
+  | 'quiplash-results';
+
+// Game mode
+export type GameMode = 'fibbage' | 'quiplash';
 
 // Player interface
 export interface Player {
@@ -19,6 +26,9 @@ export interface Player {
   currentAnswer?: string;
   votedFor?: string;
   isOnline: boolean;
+  // Quiplash: player's assigned prompts
+  quiplashPrompts?: QuiplashPrompt[];
+  quiplashAnswers?: { promptId: string; answer: string }[];
 }
 
 // Answer with metadata
@@ -31,7 +41,7 @@ export interface Answer {
   votes: string[]; // Player IDs who voted for this
 }
 
-// Trivia question structure
+// Trivia question structure (Fibbage)
 export interface Question {
   id: string;
   text: string;
@@ -41,15 +51,37 @@ export interface Question {
   source?: 'claude' | 'opentdb' | 'static';
 }
 
+// Quiplash prompt
+export interface QuiplashPrompt {
+  id: string;
+  text: string; // e.g., "The worst thing to say at a wedding"
+  category?: string;
+}
+
+// Quiplash matchup (2 answers compete head-to-head)
+export interface QuiplashMatchup {
+  id: string;
+  prompt: QuiplashPrompt;
+  answers: {
+    playerId: string;
+    playerName: string;
+    text: string;
+    votes: string[]; // Player IDs who voted for this
+  }[];
+  hasBeenShown: boolean;
+}
+
 // Game configuration (set by host)
 export interface GameConfig {
+  gameMode: GameMode;
   totalRounds: number;
   answerTimeSeconds: number;
   votingTimeSeconds: number;
-  aiAnswerCount: number; // Number of AI-generated fake answers per round
+  // Fibbage-specific
+  aiAnswerCount: number;
   verifyAnswers: boolean;
   model: string;
-  useFallbackOnly: boolean; // Use only curated static questions (no AI)
+  useFallbackOnly: boolean;
 }
 
 // Full game state
@@ -59,8 +91,13 @@ export interface GameState {
   players: Player[];
   config: GameConfig;
   currentRound: number;
+  // Fibbage
   currentQuestion: Question | null;
   answers: Answer[];
+  // Quiplash
+  quiplashMatchups: QuiplashMatchup[];
+  currentMatchupIndex: number;
+  // Shared
   timeRemaining: number;
   roundResults: RoundResult[];
 }
@@ -86,7 +123,11 @@ export type ClientMessage =
   | { type: 'play-again' }
   | { type: 'leave' }
   | { type: 'kick-player'; playerId: string }
-  | { type: 'skip-timer' };
+  | { type: 'skip-timer' }
+  // Quiplash-specific
+  | { type: 'submit-quiplash-answers'; answers: { promptId: string; answer: string }[] }
+  | { type: 'submit-quiplash-vote'; matchupId: string; votedPlayerId: string }
+  | { type: 'next-matchup' };
 
 export type ServerMessage =
   | { type: 'state-update'; state: GameState }
@@ -99,6 +140,7 @@ export type ServerMessage =
 
 // Default game configuration
 export const DEFAULT_CONFIG: GameConfig = {
+  gameMode: 'fibbage',
   totalRounds: 5,
   answerTimeSeconds: 60,
   votingTimeSeconds: 45,
@@ -110,7 +152,12 @@ export const DEFAULT_CONFIG: GameConfig = {
 
 // Scoring constants
 export const SCORING = {
+  // Fibbage
   CORRECT_GUESS: 1000,
   FOOL_PLAYER: 1000,
-  AI_VOTE: 0 // No penalty for voting for AI
+  AI_VOTE: 0,
+  // Quiplash
+  QUIPLASH_WIN: 500,      // 100% votes ("Quiplash!")
+  QUIPLASH_MAJORITY: 250, // >50% votes
+  QUIPLASH_SPLIT: 125,    // 50-50 split
 };

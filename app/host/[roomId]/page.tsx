@@ -246,6 +246,41 @@ export default function HostPage() {
               </ul>
             </div>
 
+            {/* Game Mode Toggle */}
+            <div style={{
+              display: 'flex',
+              gap: 'var(--spacing-sm)',
+              marginBottom: 'var(--spacing-lg)',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => setConfig({ ...config, gameMode: 'fibbage' })}
+                className={`btn ${config.gameMode !== 'quiplash' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{
+                  flex: 1,
+                  maxWidth: '200px',
+                  padding: '1rem',
+                  fontSize: '1.1rem',
+                  fontWeight: config.gameMode !== 'quiplash' ? 'bold' : 'normal'
+                }}
+              >
+                🎭 Fibbage
+              </button>
+              <button
+                onClick={() => setConfig({ ...config, gameMode: 'quiplash' })}
+                className={`btn ${config.gameMode === 'quiplash' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{
+                  flex: 1,
+                  maxWidth: '200px',
+                  padding: '1rem',
+                  fontSize: '1.1rem',
+                  fontWeight: config.gameMode === 'quiplash' ? 'bold' : 'normal'
+                }}
+              >
+                💬 Quiplash
+              </button>
+            </div>
+
             {/* Game config */}
             <div style={{
               background: 'rgba(0,0,0,0.2)',
@@ -254,7 +289,9 @@ export default function HostPage() {
               marginBottom: 'var(--spacing-xl)',
               textAlign: 'left'
             }}>
-              <h3 style={{ fontSize: '0.875rem', marginBottom: 'var(--spacing-md)', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Match Settings</h3>
+              <h3 style={{ fontSize: '0.875rem', marginBottom: 'var(--spacing-md)', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+                {config.gameMode === 'quiplash' ? 'Quiplash Settings' : 'Match Settings'}
+              </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--spacing-lg)' }}>
                 <div>
                   <label className="label">Rounds</label>
@@ -295,57 +332,71 @@ export default function HostPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="label">AI Answers</label>
-                  <select
-                    className="input"
-                    value={config.aiAnswerCount}
-                    onChange={(e) => setConfig({ ...config, aiAnswerCount: parseInt(e.target.value) })}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {[0, 1, 2, 3, 4, 5].map(n => (
-                      <option key={n} value={n}>{n === 0 ? 'None' : n === 1 ? '1 AI Answer' : `${n} AI Answers`}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
-                  <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
-                    <input
-                      type="checkbox"
-                      checked={config.verifyAnswers}
-                      onChange={(e) => setConfig({ ...config, verifyAnswers: e.target.checked })}
-                      style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
-                      Verify Answers <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Slower)</span>
-                    </span>
-                  </label>
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label className="label">AI Model</label>
-                  <select
-                    className="input"
-                    value={config.model || 'claude-haiku-4-5-20251001'}
-                    onChange={(e) => setConfig({ ...config, model: e.target.value })}
-                    style={{ cursor: 'pointer', width: '100%' }}
-                  >
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast &amp; Creative)</option>
-                    <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Smart &amp; Logical)</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
-                  <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
-                    <input
-                      type="checkbox"
-                      checked={config.useFallbackOnly || false}
-                      onChange={(e) => setConfig({ ...config, useFallbackOnly: e.target.checked })}
-                      style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
-                      Use Fallback Questions Only <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Curated, No AI)</span>
-                    </span>
-                  </label>
-                </div>
+                {/* Fibbage-only options */}
+                {config.gameMode !== 'quiplash' && (
+                  <>
+                    <div>
+                      <label className="label">AI Answers</label>
+                      <select
+                        className="input"
+                        value={config.aiAnswerCount}
+                        onChange={(e) => setConfig({ ...config, aiAnswerCount: parseInt(e.target.value) })}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {[0, 1, 2, 3, 4, 5].map(n => (
+                          <option key={n} value={n}>{n === 0 ? 'None' : n === 1 ? '1 AI Answer' : `${n} AI Answers`}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
+                      <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                          type="checkbox"
+                          checked={config.verifyAnswers}
+                          onChange={(e) => setConfig({ ...config, verifyAnswers: e.target.checked })}
+                          style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                          Verify Answers <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Slower)</span>
+                        </span>
+                      </label>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label className="label">AI Model</label>
+                      <select
+                        className="input"
+                        value={config.model || 'claude-haiku-4-5-20251001'}
+                        onChange={(e) => setConfig({ ...config, model: e.target.value })}
+                        style={{ cursor: 'pointer', width: '100%' }}
+                      >
+                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast &amp; Creative)</option>
+                        <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Smart &amp; Logical)</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
+                      <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                          type="checkbox"
+                          checked={config.useFallbackOnly || false}
+                          onChange={(e) => setConfig({ ...config, useFallbackOnly: e.target.checked })}
+                          style={{ marginRight: '10px', width: '20px', height: '20px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '1rem', color: 'var(--color-text-primary)' }}>
+                          Use Fallback Questions Only <span style={{ fontSize: '0.8rem', color: 'var(--color-primary-light)', marginLeft: '4px' }}>(Curated, No AI)</span>
+                        </span>
+                      </label>
+                    </div>
+                  </>
+                )}
+
+                {/* Quiplash info */}
+                {config.gameMode === 'quiplash' && (
+                  <div style={{ gridColumn: '1 / -1', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                    <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                      💬 <strong>Quiplash Mode:</strong> Players answer funny prompts, then vote on the funniest answer. No AI, no correct answers - just creativity!
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

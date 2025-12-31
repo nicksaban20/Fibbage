@@ -165,6 +165,22 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     sendMessage({ type: 'skip-timer' });
   }, [sendMessage]);
 
+  // Quiplash-specific functions
+  const submitQuiplashAnswers = useCallback((answers: { promptId: string; answer: string }[]) => {
+    log('📝 Submitting Quiplash answers:', answers);
+    sendMessage({ type: 'submit-quiplash-answers', answers });
+  }, [sendMessage]);
+
+  const submitQuiplashVote = useCallback((matchupId: string, votedPlayerId: string) => {
+    log(`🗳️ Voting for ${votedPlayerId} in matchup ${matchupId}`);
+    sendMessage({ type: 'submit-quiplash-vote', matchupId, votedPlayerId });
+  }, [sendMessage]);
+
+  const nextMatchup = useCallback(() => {
+    log('⏭️ Requesting next matchup');
+    sendMessage({ type: 'next-matchup' });
+  }, [sendMessage]);
+
   return {
     isConnected,
     gameState,
@@ -177,6 +193,10 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
     leave,
     kickPlayer,
     skipTimer,
+    // Quiplash
+    submitQuiplashAnswers,
+    submitQuiplashVote,
+    nextMatchup,
   };
 }
 
