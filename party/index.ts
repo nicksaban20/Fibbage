@@ -253,8 +253,9 @@ export default class FibbageServer implements Party.Server {
       answerTimeSeconds: Math.min(Math.max(config.answerTimeSeconds, 15), 180),
       votingTimeSeconds: Math.min(Math.max(config.votingTimeSeconds, 15), 120),
       aiAnswerCount: Math.min(Math.max(config.aiAnswerCount ?? 1, 0), 5),
-      verifyAnswers: config.verifyAnswers,
+      verifyAnswers: config.verifyAnswers ?? false,
       model: config.model || 'claude-haiku-4-5-20251001',
+      useFallbackOnly: config.useFallbackOnly ?? false, // Add missing field
     };
 
     // Show loading phase while fetching first question
