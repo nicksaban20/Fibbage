@@ -4,7 +4,9 @@
  */
 
 // Dynamic import to avoid issues in environments where transformers isn't loaded
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pipeline: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let embeddingModel: any = null;
 
 /**

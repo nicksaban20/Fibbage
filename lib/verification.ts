@@ -38,6 +38,7 @@ async function searchTavily(query: string, apiKey: string): Promise<SearchResult
         }
 
         const data = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return data.results.map((r: any) => ({
             title: r.title,
             content: r.content,

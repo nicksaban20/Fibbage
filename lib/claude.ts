@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Question } from './game-types';
-import { buildQuestionContext } from './trivia';
+
 import { validateAIAnswer } from './validation';
 
 // Initialize Anthropic client with validation
@@ -242,12 +242,15 @@ REQUIREMENTS:
   - GOOD: "The recording location was too close to a military _____." (Answer: Bakery) -> Unexpected!
   - The correct answer should feel "weird" or "funny" in context.
 
-- **AMBIGUITY REQUIREMENT:** Do NOT include descriptive words that give away the answer category.
+- **AMBIGUITY REQUIREMENT (STRICT):** 
+  - **STRIP UNNECESSARY DESCRIPTIVE WORDS.** If a word gives a hint about the answer's category (e.g. food, location, material), REMOVE IT.
   - BAD: "Smugglers would hide contraband in hollowed-out loaves of _____." (Answer: Bread) -> "Loaves" reveals it's bread.
   - GOOD: "Smugglers would hide contraband in hollowed-out _____." (Answer: Bread) -> Could be anything (Logs? Books? Shoes?).
   - BAD: "In 1814, a London brewery explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> "Brewery" implies Alcohol/Beer.
   - GOOD: "In 1814, a London explosion killed 8 people when 135,000 imperial gallons of _____ burst through the streets." (Answer: Beer) -> Now it could be anything (Molasses? Sewage? Gin?).
-  - Keep the blank OPEN-ENDED. Eliminate "Context Clues" (venue, container type) immediately before the blank.
+  - **RULE:** The blank should feel IMPOSSIBLE to guess without knowing the specific obscure fact.
+  - Eliminate "Context Clues" (venue, container type, material, action verbs that imply the object) immediately before the blank.
+  - If the answer is "Milk", DO NOT say "drank", "cow", or "white". Say "liquid", "substance", or just "_____".
 
 - **CRITICAL:** DO NOT USE ANY EXAMPLES FROM THIS PROMPT AS YOUR OUTPUT. YOU MUST GENERATE A NEW, UNIQUE QUESTION.
 

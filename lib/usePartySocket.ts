@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import PartySocket from 'partysocket';
 import type { GameState, ClientMessage, ServerMessage, GameConfig } from './game-types';
-import { DEFAULT_CONFIG } from './game-types';
+
 
 const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST || 'localhost:1999';
 
@@ -108,6 +108,7 @@ export function usePartySocket({ roomId, onStateUpdate, onError, onTimeUpdate }:
       socket.close();
       socketRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   const sendMessage = useCallback((message: ClientMessage) => {

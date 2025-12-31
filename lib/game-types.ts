@@ -93,7 +93,7 @@ export type ServerMessage =
   | { type: 'player-left'; playerId: string }
   | { type: 'time-update'; timeRemaining: number }
   | { type: 'phase-change'; phase: GamePhase }
-  | { type: 'debug-log'; message: string; data?: any };
+  | { type: 'debug-log'; message: string; data?: unknown };
 
 // Default game configuration
 export const DEFAULT_CONFIG: GameConfig = {

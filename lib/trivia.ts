@@ -17,7 +17,7 @@ interface OpenTDBResponse {
 }
 
 // Cache for pre-fetched fallback questions
-let fallbackQuestionCache: Question[] = [];
+const fallbackQuestionCache: Question[] = [];
 
 // Decode HTML entities
 function decodeHTML(text: string): string {
@@ -139,7 +139,7 @@ export async function fetchTriviaQuestions(count: number = 10, apiKey?: string):
 }
 
 // Fetch questions from Open Trivia Database (fallback)
-async function fetchFromOpenTriviaDB(count: number): Promise<Question[]> {
+export async function fetchFromOpenTriviaDB(count: number): Promise<Question[]> {
   console.log(`[Trivia] Fetching ${count} questions from Open Trivia DB...`);
 
   // Categories good for Fibbage (ID: Name)
