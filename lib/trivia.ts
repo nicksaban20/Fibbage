@@ -68,7 +68,15 @@ export async function fetchSingleQuestion(
   // If fallback-only mode is enabled, skip AI and use curated questions
   if (useFallbackOnly) {
     log(`[Trivia] Using fallback-only mode (curated questions)`);
-    const fallbacks = getFallbackQuestions();
+    const allFallbacks = getFallbackQuestions();
+    // Filter out any questions already used in this game
+    const availableFallbacks = allFallbacks.filter(
+      q => !previousQuestions.some(prev => prev === q.text)
+    );
+    log(`[Trivia] ${availableFallbacks.length}/${allFallbacks.length} fallback questions available`);
+
+    // If all questions used, allow repeats (shouldn't happen with 100+ questions)
+    const fallbacks = availableFallbacks.length > 0 ? availableFallbacks : allFallbacks;
     const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     log(`[Trivia] Selected fallback: "${randomFallback.text.slice(0, 50)}..."`);
     return randomFallback;
