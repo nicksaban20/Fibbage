@@ -519,7 +519,7 @@ export default function HostPage() {
                       <span style={{ color: 'var(--color-accent)' }}>🤖 AI Deception</span>
                     ) : (
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {answer.playerIds.map(pid => {
+                        {answer.playerIds?.map(pid => {
                           const p = gameState.players.find(pl => pl.id === pid);
                           return p ? (
                             <span key={pid} className="player-chip small" style={{ fontSize: '0.8rem', padding: '2px 8px' }}>
