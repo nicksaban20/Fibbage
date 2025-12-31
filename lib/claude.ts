@@ -337,21 +337,36 @@ ANSWER: [1 word answer]`
       const questionMatch = responseText.match(/QUESTION:\s*([^\n]+)/i);
       const answerMatch = responseText.match(/ANSWER:\s*([^\n]+)/i);
 
+      // Log parsed results to client for debugging
+      if (logger) {
+        logger(`📋 PARSED FROM CLAUDE:`);
+        logger(`   Q: "${questionMatch ? questionMatch[1].trim() : 'N/A'}"`);
+        logger(`   A: "${answerMatch ? answerMatch[1].trim() : 'N/A'}"`);
+      }
+
       // Verification Step
       if (shouldVerify) {
-        console.log(`[Claude] Verification enabled. Checking fact: "${questionMatch ? questionMatch[1].trim() : 'N/A'}" -> "${answerMatch ? answerMatch[1].trim() : 'N/A'}"`);
+        const qText = questionMatch ? questionMatch[1].trim() : '';
+        const aText = answerMatch ? answerMatch[1].trim() : '';
+
+        if (logger) {
+          logger(`🔍 SENDING TO VERIFICATION:`);
+          logger(`   Question: "${qText}"`);
+          logger(`   Answer: "${aText}"`);
+        }
+
         const verification = await verifyFactWithSearch(
-          questionMatch ? questionMatch[1].trim() : '',
-          answerMatch ? answerMatch[1].trim() : '',
-          tavilyApiKey, // Pass the Tavily API key from server
+          qText,
+          aText,
+          tavilyApiKey,
           model,
           logger
         );
         if (!verification.verified) {
-          console.warn(`[Claude] Fact verification failed: ${verification.reason}. Retrying question generation.`);
-          continue; // Skip this attempt and try again
+          if (logger) logger(`❌ Verification FAILED: ${verification.reason} - regenerating...`);
+          continue;
         }
-        console.log('[Claude] Fact verified successfully.');
+        if (logger) logger(`✅ Verification PASSED`);
       }
 
       if (!questionMatch || !answerMatch) {
@@ -388,6 +403,12 @@ ANSWER: [1 word answer]`
       // If no blanks found, append them
       if (!formattedQuestion.includes('_____')) {
         formattedQuestion = formattedQuestion.replace(/\.\s*$/, '') + ' ' + blanks + '.';
+      }
+
+      if (logger) {
+        logger(`🎯 FINAL QUESTION TO GAME:`);
+        logger(`   "${formattedQuestion}"`);
+        logger(`   Answer: "${answer}"`);
       }
 
       return {
