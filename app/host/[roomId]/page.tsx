@@ -16,7 +16,7 @@ export default function HostPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQr, setShowQr] = useState(false);
 
-  const { isConnected, gameState, join, startGame, nextRound, playAgain, kickPlayer } = usePartySocket({
+  const { isConnected, gameState, join, startGame, nextRound, playAgain, kickPlayer, skipTimer } = usePartySocket({
     roomId,
     onError: setError,
     onTimeUpdate: setTimeRemaining,
@@ -413,6 +413,19 @@ export default function HostPage() {
                 Waiting for lies... {gameState.players.filter(p => p.hasSubmittedAnswer && !p.isHost).length} / {gameState.players.filter(p => !p.isHost).length}
               </span>
             </div>
+            <button
+              onClick={skipTimer}
+              className="btn-secondary"
+              style={{
+                marginLeft: '1rem',
+                padding: '0.5rem 1rem',
+                fontSize: '0.9rem',
+                background: 'rgba(255, 255, 255, 0.1)'
+              }}
+              title="End timer immediately"
+            >
+              Skip Timer ⏭
+            </button>
 
             <div style={{ marginTop: 'var(--spacing-xl)', display: 'flex', justifyContent: 'center', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
               {gameState.players.filter(p => !p.isHost).map((player) => (
@@ -473,6 +486,19 @@ export default function HostPage() {
                 Votes cast: {gameState.players.filter(p => p.hasVoted && !p.isHost).length} / {gameState.players.filter(p => !p.isHost).length}
               </span>
             </div>
+            <button
+              onClick={skipTimer}
+              className="btn-secondary"
+              style={{
+                marginLeft: '1rem',
+                padding: '0.5rem 1rem',
+                fontSize: '0.9rem',
+                background: 'rgba(255, 255, 255, 0.1)'
+              }}
+              title="End timer immediately"
+            >
+              Skip Timer ⏭
+            </button>
           </div>
         </div>
       )}

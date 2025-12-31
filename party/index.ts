@@ -129,6 +129,9 @@ export default class FibbageServer implements Party.Server {
         case "kick-player":
           this.handleKickPlayer(sender, data.playerId);
           break;
+        case "skip-timer":
+          this.handleSkipTimer(sender);
+          break;
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -771,6 +774,48 @@ export default class FibbageServer implements Party.Server {
     if (targetConn) {
       this.sendError(targetConn, "You have been kicked by the host.");
       targetConn.close();
+    }
+  }
+
+  // Handle skipping the timer
+  handleSkipTimer(conn: Party.Connection) {
+    const sender = this.state.players.find((p) => p.id === conn.id);
+    if (!sender?.isHost) {
+      this.sendError(conn, "Only the host can skip the timer");
+      return;
+    }
+
+    if (this.state.phase === 'answering') {
+      this.broadcastLog('[FibbageServer] Host skipped answering timer');
+      this.stopTimer();
+      this.endAnsweringPhase();
+    } else if (this.state.phase === 'voting') {
+      this.broadcastLog('[FibbageServer] Host skipped voting timer');
+      this.stopTimer();
+      this.endVotingPhase();
+    } else {
+      this.sendError(conn, "Cannot skip timer in this phase");
+    }
+  }
+
+  // Handle skipping the timer
+  handleSkipTimer(conn: Party.Connection) {
+    const sender = this.state.players.find((p) => p.id === conn.id);
+    if (!sender?.isHost) {
+      this.sendError(conn, "Only the host can skip the timer");
+      return;
+    }
+
+    if (this.state.phase === 'answering') {
+      this.broadcastLog('[FibbageServer] Host skipped answering timer');
+      this.stopTimer();
+      this.endAnsweringPhase();
+    } else if (this.state.phase === 'voting') {
+      this.broadcastLog('[FibbageServer] Host skipped voting timer');
+      this.stopTimer();
+      this.endVotingPhase();
+    } else {
+      this.sendError(conn, "Cannot skip timer in this phase");
     }
   }
 

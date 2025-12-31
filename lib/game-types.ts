@@ -84,7 +84,8 @@ export type ClientMessage =
   | { type: 'next-round' }
   | { type: 'play-again' }
   | { type: 'leave' }
-  | { type: 'kick-player'; playerId: string };
+  | { type: 'kick-player'; playerId: string }
+  | { type: 'skip-timer' };
 
 export type ServerMessage =
   | { type: 'state-update'; state: GameState }
